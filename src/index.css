@@ -1,0 +1,114 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./styles/tokens.css";
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--on-surface);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--on-surface);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--bg);
+  --color-secondary: var(--paper-dim);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: color-mix(in srgb, var(--fg) 12%, transparent);
+  --color-muted-foreground: var(--muted-fg);
+  --color-accent: color-mix(in srgb, var(--fg) 10%, transparent);
+  --color-accent-foreground: var(--fg);
+  --color-destructive: var(--red-bright);
+  --color-border: color-mix(in srgb, var(--line) 35%, transparent);
+  --color-input: var(--line);
+  --color-ring: var(--fg);
+
+  --color-paper: var(--paper);
+  --color-paper-dim: var(--paper-dim);
+  --color-ink: var(--ink);
+  --color-blood: var(--red);
+  --color-stamp: var(--stamp);
+
+  --font-display: "Anton", "Arial Narrow", sans-serif;
+  --font-body: "Crimson Pro", Georgia, serif;
+  --font-machine: "Courier Prime", "Courier New", monospace;
+
+  --ease-print: cubic-bezier(0.2, 0, 0, 1);
+  --ease-plummet: cubic-bezier(0.55, 0, 1, 0.45);
+
+  --radius: 0rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  :focus-visible {
+    outline: 2px dashed var(--color-foreground);
+    outline-offset: 3px;
+  }
+}
+
+@utility shadow-print {
+  box-shadow: 4px 4px 0 0 var(--color-ink);
+}
+
+@utility shadow-print-sm {
+  box-shadow: 3px 3px 0 0 var(--color-ink);
+}
+
+@utility shadow-print-lg {
+  box-shadow: 7px 7px 0 0 var(--color-ink);
+}
+
+@utility text-outline {
+  -webkit-text-stroke: 2px currentColor;
+  -webkit-text-fill-color: transparent;
+}
+
+@utility halftone {
+  background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.3px);
+  background-size: 7px 7px;
+}
+
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.caret-blink {
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,29 @@
+:root,
+[data-world="red"] {
+  --paper: #f3eee3;
+  --paper-dim: #e7dfcc;
+  --ink: #17120c;
+  --red: #c8281e;
+  --red-bright: #e03a24;
+  --stamp: #e03a24;
+
+  --bg: var(--red);
+  --fg: #f6f1e5;
+  --muted-fg: rgb(246 241 229 / 0.72);
+  --accent: var(--ink);
+  --line: var(--ink);
+  --surface: var(--paper);
+  --on-surface: var(--ink);
+  --redaction: var(--ink);
+}
+
+[data-world="black"] {
+  --bg: #14100b;
+  --fg: #f6f1e5;
+  --muted-fg: rgb(246 241 229 / 0.65);
+  --accent: var(--red-bright);
+  --line: #f3eee3;
+  --surface: #221b14;
+  --on-surface: var(--paper);
+  --redaction: #453a30;
+}
