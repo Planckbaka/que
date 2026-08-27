@@ -38,3 +38,11 @@ export function railShift(progress: number, contentW: number, viewW: number): nu
   const shift = -overflow * clamped;
   return shift === 0 ? 0 : shift;
 }
+
+/**
+ * 中缝（P1/T4 CenterSeam）位置纯函数：把任意百分比钳制到中缝可用区间 [5, 95]，
+ * 保证左右两个世界各留一条可见纸边。
+ */
+export function clampPct(v: number): number {
+  return Math.min(95, Math.max(5, v));
+}
