@@ -17,9 +17,7 @@ describe("ShowcasePage", () => {
     render(<Page />);
     expect(screen.getByText(/The Case of/i)).toBeInTheDocument();
     expect(screen.getByText(/Case No\. 1954-PYE/i)).toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.getByText("PYE HALL")).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText("PYE HALL")).toBeInTheDocument());
   });
 
   it("flips the world when the divider switch is toggled", async () => {
