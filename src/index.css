@@ -20,6 +20,7 @@
   --color-destructive: var(--red-bright);
   --color-border: color-mix(in srgb, var(--line) 35%, transparent);
   --color-input: var(--line);
+  --color-line: var(--line);
   --color-ring: var(--fg);
 
   --color-paper: var(--paper);

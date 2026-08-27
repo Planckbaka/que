@@ -15,8 +15,11 @@ import {
   Teacup,
 } from "@/components/magpie/silhouettes";
 import { AnagramText } from "@/components/motion/AnagramText";
+import { CenterSeam } from "@/components/motion/CenterSeam";
+import { HorizontalRail } from "@/components/motion/HorizontalRail";
 import { MorphIn } from "@/components/motion/MorphIn";
 import { PageFlutter } from "@/components/motion/PageFlutter";
+import { PressTape } from "@/components/motion/PressTape";
 import { StaggerList } from "@/components/motion/StaggerList";
 import { TypewriterText } from "@/components/motion/TypewriterText";
 import { useWorld } from "@/components/motion/WorldWipe";
@@ -124,6 +127,51 @@ function WorldDivider() {
         </p>
       </div>
     </section>
+  );
+}
+
+function RailDemo() {
+  return (
+    <HorizontalRail ariaLabel="Exhibit gallery">
+      {EXHIBITS.map((ex) => (
+        <figure
+          key={ex.badge}
+          className="w-[70vw] shrink-0 border-2 border-line bg-card p-8 shadow-print"
+        >
+          {ex.art}
+          <p className="mt-6 text-lg italic">{ex.title}</p>
+          <figcaption className="mt-2 font-machine text-xs uppercase tracking-[0.25em]">
+            {ex.badge}
+          </figcaption>
+          <p className="mt-2 text-base italic opacity-70">{ex.date}</p>
+        </figure>
+      ))}
+    </HorizontalRail>
+  );
+}
+
+function SeamDemo() {
+  return (
+    <CenterSeam
+      left={
+        <div className="flex h-full flex-col justify-center p-8 md:p-12">
+          <p className="font-display text-xl uppercase tracking-wide md:text-2xl">Author World</p>
+          <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper/75">
+            Drag the seam, or use the arrow keys
+          </p>
+        </div>
+      }
+      right={
+        <div className="flex h-full flex-col items-end justify-center p-8 text-right md:p-12">
+          <p className="font-display text-xl uppercase tracking-wide md:text-2xl">
+            Detective World
+          </p>
+          <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper/65">
+            Two worlds, one fold
+          </p>
+        </div>
+      }
+    />
   );
 }
 
@@ -369,6 +417,9 @@ export default function ShowcasePage() {
       <main>
         <Hero />
         <WorldDivider />
+        <PressTape items={["ONE FOR SORROW", "SEVEN FOR A SECRET", "CASE 1954-PYE REOPENED"]} />
+        <RailDemo />
+        <SeamDemo />
         <EvidenceLocker />
         <CaseNotes />
         <CounterSection />

@@ -38,4 +38,13 @@ describe("ShowcasePage", () => {
     await user.click(screen.getByRole("button", { name: /one magpie more/i }));
     expect(screen.getByText("Two for joy")).toBeInTheDocument();
   });
+
+  it("wires the p1 motion primitives into the page", () => {
+    render(<Page />);
+    expect(screen.getByRole("marquee")).toBeInTheDocument();
+    expect(screen.getByLabelText("Exhibit gallery")).toHaveAttribute("data-variant", "pinned");
+    expect(
+      screen.getByRole("separator", { name: "Drag to resize the two worlds" }),
+    ).toBeInTheDocument();
+  });
 });
