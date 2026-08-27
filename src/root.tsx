@@ -11,6 +11,7 @@ import "@fontsource/courier-prime/400.css";
 import "@fontsource/courier-prime/700.css";
 import "./index.css";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { VeilOverlay, VeilProvider } from "@/components/motion/Veil";
 import { WorldProvider } from "@/components/motion/WorldWipe";
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -41,7 +42,10 @@ export default function App() {
   return (
     <WorldProvider>
       <SmoothScroll>
-        <Outlet />
+        <VeilProvider>
+          <Outlet />
+          <VeilOverlay />
+        </VeilProvider>
       </SmoothScroll>
     </WorldProvider>
   );
