@@ -56,7 +56,9 @@ export function AnagramText({ text, className, delay = 350, beat = 110 }: Anagra
     setDisplay(seededScramble(text));
     const start = Date.now() + delay;
     const id = window.setInterval(() => {
-      const resolved = Math.floor((Date.now() - start) / beat);
+      // Math.max 防负切片：延迟期内 tick 落在 start 之前，floor 为负会把 slice 变成"去尾"，
+      // 造成「半解→回乱」的视觉怪象；钳制到 0 = 延迟期内保持完整乱序。
+      const resolved = Math.max(0, Math.floor((Date.now() - start) / beat));
       if (resolved >= text.length) {
         setDisplay(text);
         window.clearInterval(id);
