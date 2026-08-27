@@ -26,3 +26,15 @@ export function stagger(index: number, step: number = STAGGER_STEP): number {
 export function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
+
+/**
+ * 横向长廊（P1/T2 HorizontalRail）位移纯函数：把 [0,1] 进度映射为 ≤0 的
+ * translateX 像素值。进度钳制到 [0,1]；内容不足一屏（无水平溢出）时恒为 0。
+ * 返回值把 -0 归一为 +0——Vitest 的 toBe 走 Object.is，两个零严格不相等。
+ */
+export function railShift(progress: number, contentW: number, viewW: number): number {
+  const overflow = Math.max(0, contentW - viewW);
+  const clamped = Math.min(1, Math.max(0, progress));
+  const shift = -overflow * clamped;
+  return shift === 0 ? 0 : shift;
+}
