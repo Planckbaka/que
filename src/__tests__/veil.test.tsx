@@ -74,4 +74,16 @@ describe("Veil", () => {
     expect(screen.getByText("Away")).toBeInTheDocument();
     expect(awayMounts).toBe(1);
   });
+
+  it("修饰键点击不劫持：页面停留在 Home", async () => {
+    renderApp();
+    const link = screen.getByText("Go away");
+    await act(async () => {
+      fireEvent.click(link, { metaKey: true });
+      await vi.advanceTimersByTimeAsync(600);
+    });
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.queryByText("Away")).toBeNull();
+    expect(document.querySelector('[data-veil][data-covering="true"]')).toBeNull();
+  });
 });

@@ -44,7 +44,9 @@ type AnagramTextProps = {
 
 export function AnagramText({ text, className, delay = 350, beat = 110 }: AnagramTextProps) {
   const reduced = useReducedMotion();
-  const [display, setDisplay] = useState(() => (reduced ? text : seededScramble(text)));
+  // 水合契约：首帧恒为确定性乱序（与预渲染 HTML 一致）；reduced 用户由挂载 effect 置为明文。
+  // 切勿在初始化器里按 reduced 分叉——服务端 reduced 恒为 falsy，会固化出与客户端不同的首帧。
+  const [display, setDisplay] = useState(() => seededScramble(text));
 
   useEffect(() => {
     if (reduced) {
