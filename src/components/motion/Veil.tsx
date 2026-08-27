@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { Link, useNavigate } from "react-router";
-import { EASE_PRINT } from "@/lib/motion";
+import { EASE_PRINT, prefersReducedMotion } from "@/lib/motion";
 
 export const VEIL_HALF_MS = 550;
 
@@ -22,7 +22,7 @@ type VeilState = {
 
 const VeilStateContext = createContext<VeilState | null>(null);
 
-/** 路由擦除转场 API：travel("/path") = 盖下 550ms → 导航 → 揭开 550ms */
+/** 路由擦除转场 API：travel("/path") = 盖下 550ms → 导航 → 揭开 550ms；reduced-motion 命中时跳过动画直接导航 */
 export function useVeil(): { travel: (to: string) => void } {
   const ctx = useContext(VeilStateContext);
   if (!ctx) throw new Error("useVeil must be used inside VeilProvider");
@@ -36,6 +36,11 @@ export function VeilProvider({ children }: { children: ReactNode }) {
 
   const travel = useCallback(
     (to: string) => {
+      if (prefersReducedMotion()) {
+        // reduced-motion：无动画即合规——跳过遮幅/揭开，直接导航
+        navigate(to);
+        return;
+      }
       if (busy.current) return; // 防重入
       busy.current = true;
       setCovering(true);

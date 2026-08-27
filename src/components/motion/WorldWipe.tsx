@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { EASE_PRINT } from "@/lib/motion";
+import { EASE_PRINT, prefersReducedMotion } from "@/lib/motion";
 
 export type World = "red" | "black";
 
@@ -38,6 +38,11 @@ export function WorldProvider({ children }: { children: ReactNode }) {
   }, [world]);
 
   const toggle = useCallback(() => {
+    if (prefersReducedMotion()) {
+      // reduced-motion：无动画即合规——跳过擦除动画与两段 setTimeout，世界状态直接翻转
+      setWorld((w) => (w === "red" ? "black" : "red"));
+      return;
+    }
     if (busy.current) return;
     busy.current = true;
     setWiping(true);

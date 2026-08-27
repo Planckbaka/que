@@ -11,8 +11,18 @@ export default async function handleRequest(
   responseHeaders: Headers,
   routerContext: EntryContext,
 ): Promise<Response> {
+  // Timeout guard: if rendering hangs, the abort fires and the awaited promise / allReady
+  // rejects, so static generation fails explicitly instead of emitting a half-built HTML.
+  const signal = AbortSignal.timeout(10_000);
   const stream = await renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} />,
+    {
+      signal,
+      // Post-shell render errors must be logged (pre-shell errors surface via the await above).
+      onError(error) {
+        console.error(error);
+      },
+    },
   );
   // SPA-mode static generation must wait for all content (not just the shell).
   await stream.allReady;

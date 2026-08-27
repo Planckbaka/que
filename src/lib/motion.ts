@@ -18,3 +18,11 @@ export const STAGGER_STEP = 0.06;
 export function stagger(index: number, step: number = STAGGER_STEP): number {
   return index * step;
 }
+
+/**
+ * 系统级 reduced-motion 统一读取入口，供 SmoothScroll / Veil / WorldWipe 三处复用。
+ * 必须在「调用时」读取（而非模块加载时缓存），否则测试里的 matchMedia 存根不生效。
+ */
+export function prefersReducedMotion(): boolean {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
