@@ -83,9 +83,10 @@ export function LinkUnderVeil({ to, onClick, ...rest }: LinkUnderVeilProps) {
   return (
     <Link
       to={to}
-      onClick={(event) => {
-        event.preventDefault();
-        onClick?.(event);
+      onClick={(e) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        onClick?.(e);
         travel(to);
       }}
       {...rest}
