@@ -140,10 +140,10 @@ function RailDemo() {
         >
           {ex.art}
           <p className="mt-6 text-lg italic">{ex.title}</p>
+          <p className="mt-2 text-base italic opacity-70">{ex.date}</p>
           <figcaption className="mt-2 font-machine text-xs uppercase tracking-[0.25em]">
             {ex.badge}
           </figcaption>
-          <p className="mt-2 text-base italic opacity-70">{ex.date}</p>
         </figure>
       ))}
     </HorizontalRail>
