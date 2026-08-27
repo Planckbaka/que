@@ -102,6 +102,23 @@
   animation: caret-blink 1s steps(1) infinite;
 }
 
+@keyframes tape-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.press-tape-track {
+  animation: tape-scroll 24s linear infinite;
+}
+
+.press-tape:hover .press-tape-track {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
