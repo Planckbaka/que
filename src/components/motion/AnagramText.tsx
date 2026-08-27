@@ -3,10 +3,34 @@ import { useEffect, useState } from "react";
 
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ&#%?";
 
-function scramble(source: string): string {
+/** FNV-1a：把任意字符串折叠为 32 位确定性种子 */
+function fnv1a(text: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+/** mulberry32：由 32 位种子生成确定性的 [0, 1) 随机流 */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** 确定性乱序：同 text 同输出序列，预渲染 HTML 与客户端一致 */
+function seededScramble(text: string): string {
+  const random = mulberry32(fnv1a(text));
   let out = "";
-  for (const ch of source) {
-    out += ch === " " ? " " : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+  for (const ch of text) {
+    out += ch === " " ? " " : GLYPHS[Math.floor(random() * GLYPHS.length)];
   }
   return out;
 }
@@ -20,14 +44,14 @@ type AnagramTextProps = {
 
 export function AnagramText({ text, className, delay = 350, beat = 110 }: AnagramTextProps) {
   const reduced = useReducedMotion();
-  const [display, setDisplay] = useState(() => (reduced ? text : scramble(text)));
+  const [display, setDisplay] = useState(() => (reduced ? text : seededScramble(text)));
 
   useEffect(() => {
     if (reduced) {
       setDisplay(text);
       return;
     }
-    setDisplay(scramble(text));
+    setDisplay(seededScramble(text));
     const start = Date.now() + delay;
     const id = window.setInterval(() => {
       const resolved = Math.floor((Date.now() - start) / beat);
@@ -36,7 +60,7 @@ export function AnagramText({ text, className, delay = 350, beat = 110 }: Anagra
         window.clearInterval(id);
         return;
       }
-      setDisplay(text.slice(0, resolved) + scramble(text.slice(resolved)));
+      setDisplay(text.slice(0, resolved) + seededScramble(text.slice(resolved)));
     }, 55);
     return () => window.clearInterval(id);
   }, [text, reduced, delay, beat]);
