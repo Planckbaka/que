@@ -1,31 +1,29 @@
 import { motion, useScroll, useTransform } from "motion/react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { prefersReducedMotion, railShift } from "@/lib/motion";
 
 type RailProps = { children: ReactNode; ariaLabel?: string };
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
 
 export function HorizontalRail({ children, ariaLabel }: RailProps) {
   const outerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const [shift, setShift] = useState(0);
+  // 保存测量原值而非换算后的位移：px 换算唯一入口是 lib 的 railShift（此处不内联公式）。
+  const [dims, setDims] = useState({ contentW: 0, viewW: 0 });
   const [native, setNative] = useState(false);
 
-  const reduced = prefersReducedMotion();
+  // reduced-motion 只在客户端 effect 里采样：prerender/SSR 渲染 pinned 形态（Node 无 window），
+  // reduced 用户水合后由本 effect 切 native——与 SmoothScroll/Veil/WorldWipe 同一口径。
   useEffect(() => {
-    setNative(reduced);
-  }, [reduced]);
+    setNative(prefersReducedMotion());
+  }, []);
 
   useEffect(() => {
     if (native) return;
     const measure = () => {
-      const c = trackRef.current?.scrollWidth ?? 0;
-      setShift(Math.max(0, c - window.innerWidth));
+      setDims({
+        contentW: trackRef.current?.scrollWidth ?? 0,
+        viewW: window.innerWidth,
+      });
     };
     const onResize = () => measure();
     measure();
@@ -37,7 +35,7 @@ export function HorizontalRail({ children, ariaLabel }: RailProps) {
     target: outerRef,
     offset: ["start start", "end end"],
   });
-  const x = useTransform(scrollYProgress, (p) => -Math.max(0, shift) * p);
+  const x = useTransform(scrollYProgress, (p) => railShift(p, dims.contentW, dims.viewW));
   return (
     <section ref={outerRef} data-variant={native ? "native" : "pinned"} aria-label={ariaLabel}>
       <div
