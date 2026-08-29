@@ -1,15 +1,18 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, expect, it } from "vitest";
+import { WorldProvider } from "@/components/motion/WorldWipe";
 import { articles, getArticle, publishedArticles } from "@/lib/content";
 import FilePage, { meta } from "@/pages/FilePage";
 
 function renderAtSlug(slug: string) {
   return render(
     <MemoryRouter initialEntries={[`/files/${slug}`]}>
-      <Routes>
-        <Route path="/files/:slug" element={<FilePage />} />
-      </Routes>
+      <WorldProvider>
+        <Routes>
+          <Route path="/files/:slug" element={<FilePage />} />
+        </Routes>
+      </WorldProvider>
     </MemoryRouter>,
   );
 }

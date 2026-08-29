@@ -1,4 +1,5 @@
 import { useParams } from "react-router";
+import { GiscusComments } from "@/components/comments/GiscusComments";
 import { articleComponents } from "@/components/mdx/article-components";
 import { ChapterNumeral } from "@/components/motion/ChapterNumeral";
 import { ReadingFolio } from "@/components/motion/ReadingFolio";
@@ -72,6 +73,9 @@ export default function FilePage() {
           </p>
           <div className="mt-10">
             <Component components={articleComponents} />
+          </div>
+          <div className="mt-14">
+            <GiscusComments />
           </div>
         </div>
       </article>
