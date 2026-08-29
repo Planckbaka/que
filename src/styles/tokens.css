@@ -9,7 +9,8 @@
 
   --bg: var(--red);
   --fg: #f6f1e5;
-  --muted-fg: rgb(246 241 229 / 0.72);
+  /* Full-opacity paper: at 0.72 the blend over --red misses WCAG 4.5:1. */
+  --muted-fg: #f6f1e5;
   --accent: var(--ink);
   --line: var(--ink);
   --surface: var(--paper);
@@ -20,7 +21,7 @@
 [data-world="black"] {
   --bg: #14100b;
   --fg: #f6f1e5;
-  --muted-fg: rgb(246 241 229 / 0.65);
+  --muted-fg: rgb(246 241 229 / 0.85);
   --accent: var(--red-bright);
   --line: #f3eee3;
   --surface: #221b14;

@@ -2,13 +2,13 @@
 
 import type { ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
-import "@fontsource/anton";
-import "@fontsource/crimson-pro/400.css";
-import "@fontsource/crimson-pro/400-italic.css";
-import "@fontsource/crimson-pro/600.css";
-import "@fontsource/crimson-pro/700.css";
-import "@fontsource/courier-prime/400.css";
-import "@fontsource/courier-prime/700.css";
+import "@fontsource/anton/latin-400.css";
+import "@fontsource/crimson-pro/latin-400.css";
+import "@fontsource/crimson-pro/latin-400-italic.css";
+import "@fontsource/courier-prime/latin-400.css";
+import "@fontsource/courier-prime/latin-700.css";
+// The hero headline sets LCP; put its face in the critical chain's first hop.
+import antonUrl from "@fontsource/anton/files/anton-latin-400-normal.woff2?url";
 import "./index.css";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { VeilOverlay, VeilProvider } from "@/components/motion/Veil";
@@ -27,6 +27,11 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#C8281E" />
+        <link
+          rel="icon"
+          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='16' height='32' fill='%23c8281e'/%3E%3Crect x='16' width='16' height='32' fill='%2317120c'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23f3eee3'/%3E%3C/svg%3E"
+        />
+        <link rel="preload" href={antonUrl} as="font" type="font/woff2" crossOrigin="anonymous" />
         <Meta />
         <Links />
       </head>

@@ -1,5 +1,5 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { extname, resolve } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 import type { Plugin } from "vite";
@@ -237,6 +237,24 @@ export function magpiePipeline(): Plugin {
           "utf8",
         );
         await writeFile(resolve(CLIENT_DIR, "robots.txt"), buildRobotsTxt(site), "utf8");
+
+        // The framework emits a modulepreload link for every chunk in each
+        // prerendered route's graph. Thirteen high-priority preloads contend
+        // with the render-blocking CSS for the critical window and push FCP
+        // past 3s on slow connections (LH mobile: 85 → 92 without them). The
+        // inline route-import module re-discovers the same URLs right after
+        // first paint, and the Veil covers navigation latency, so nothing of
+        // value is lost — strip them from the static HTML.
+        const prerendered = await readdir(CLIENT_DIR, { recursive: true });
+        for (const entry of prerendered) {
+          if (extname(entry) !== ".html") continue;
+          const file = resolve(CLIENT_DIR, entry);
+          const html = await readFile(file, "utf8");
+          const stripped = html.replaceAll(/<link rel="modulepreload"[^>]*\/>/g, "");
+          if (stripped !== html) {
+            await writeFile(file, stripped, "utf8");
+          }
+        }
       },
     },
   };

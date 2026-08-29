@@ -83,7 +83,7 @@ export default function FilesPage() {
         <section
           key={track.world}
           data-world={track.world}
-          className="border-t-2 border-ink px-6 py-14 md:px-10"
+          className="border-t-2 border-ink bg-background px-6 py-14 md:px-10"
         >
           <header className="mx-auto max-w-[76rem]">
             <p className="font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
