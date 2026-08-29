@@ -1,3 +1,4 @@
+import readingTime from "reading-time";
 import { z } from "zod";
 
 // Single source of truth for case-file frontmatter (spec §4.1). Both content
@@ -23,4 +24,15 @@ export function slugFromFile(filename: string): string {
     throw new Error(`content files must be .mdx, got: ${filename}`);
   }
   return filename.slice(0, -".mdx".length);
+}
+
+export function readingMinutes(body: string): number {
+  return Math.max(1, Math.round(readingTime(body).minutes));
+}
+
+export function compareNewestFirst(
+  a: { frontmatter: FileFrontmatter },
+  b: { frontmatter: FileFrontmatter },
+): number {
+  return Date.parse(b.frontmatter.date) - Date.parse(a.frontmatter.date);
 }

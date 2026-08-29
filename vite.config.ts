@@ -8,6 +8,7 @@ import tailwindcss from "@tailwindcss/vite";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { defineConfig } from "vitest/config";
+import { magpieCaseFiles } from "./scripts/magpie-content";
 import { inkTheme, paperTheme } from "./src/lib/code-themes";
 
 export default defineConfig({
@@ -42,6 +43,7 @@ export default defineConfig({
         ],
       ],
     }),
+    magpieCaseFiles(),
     ...(process.env.VITEST ? [] : [reactRouter()]),
     tailwindcss(),
   ],

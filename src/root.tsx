@@ -14,6 +14,12 @@ import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { VeilOverlay, VeilProvider } from "@/components/motion/Veil";
 import { WorldProvider } from "@/components/motion/WorldWipe";
 
+// Default title only — every leaf route owns its own title/description meta so
+// the prerendered pages never emit duplicate description tags.
+export function meta() {
+  return [{ title: "The Magpie Files · 喜鹊档案" }];
+}
+
 export function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" data-world="red">
@@ -21,11 +27,6 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#C8281E" />
-        <meta
-          name="description"
-          content="The Magpie Files — engineering notes and algorithm case files by Orion Arch."
-        />
-        <title>The Magpie Files · 喜鹊档案</title>
         <Meta />
         <Links />
       </head>

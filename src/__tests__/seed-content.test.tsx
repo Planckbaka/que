@@ -10,9 +10,10 @@ import GradientCase, {
 const CONTENT_DIR = resolve(process.cwd(), "content/files");
 
 describe("seed case files", () => {
-  it("parses all three seeds through the build-side scanner", async () => {
+  it("parses every seed through the build-side scanner, newest first", async () => {
     const articles = await scanArticles(CONTENT_DIR);
     expect(articles.map((a) => a.slug)).toEqual([
+      "sealed-testimony-of-the-overfitted-witness",
       "the-case-of-the-blazing-build",
       "one-for-sorrow-attention-is-a-witness",
       "the-case-of-the-vanishing-gradient",

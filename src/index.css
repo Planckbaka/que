@@ -120,6 +120,110 @@
   animation-play-state: paused;
 }
 
+/* Case-file article typography (P2 content pipeline; P3 adds Folio chrome). */
+.case-file p {
+  margin-block: 1.125rem;
+  line-height: 1.75;
+}
+
+.case-file h2 {
+  margin-block: 2.5rem 1rem;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.case-file h3 {
+  margin-block: 2rem 0.75rem;
+  font-family: var(--font-machine);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.case-file ul {
+  margin-block: 1.125rem;
+  padding-left: 1.5rem;
+  list-style: disc;
+}
+
+.case-file ol {
+  margin-block: 1.125rem;
+  padding-left: 1.5rem;
+  list-style: decimal;
+}
+
+.case-file li {
+  margin-block: 0.4rem;
+  padding-left: 0.25rem;
+  line-height: 1.7;
+}
+
+.case-file li::marker {
+  color: var(--color-primary);
+}
+
+.case-file figure {
+  margin-block: 1.75rem;
+}
+
+.case-file pre {
+  margin-block: 1.5rem;
+  border: 2px solid var(--color-line);
+  background: color-mix(in srgb, var(--color-ink) 4%, transparent);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  box-shadow: 3px 3px 0 0 var(--color-line);
+  font-family: var(--font-machine);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+.case-file :not(pre) > code {
+  font-family: var(--font-machine);
+  font-size: 0.85em;
+  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
+  padding: 0.15em 0.4em;
+  border: 1px solid color-mix(in srgb, var(--color-line) 45%, transparent);
+}
+
+/* Shiki dual themes (spec §4.2): compiled HTML carries the paper theme inline
+   plus --shiki-dark variables. The black world flips via CSS variables only —
+   no re-highlight, no repaint flicker. */
+[data-world="black"] .shiki span {
+  color: var(--shiki-dark);
+}
+
+[data-world="black"] .shiki {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+/* Print-style line numbers via CSS counter (spec §4.2). */
+.shiki code {
+  counter-reset: line;
+  display: block;
+}
+
+.shiki .line {
+  display: block;
+}
+
+.shiki .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2.5ch;
+  margin-right: 1.5ch;
+  text-align: right;
+  font-family: var(--font-machine);
+  opacity: 0.4;
+  user-select: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
