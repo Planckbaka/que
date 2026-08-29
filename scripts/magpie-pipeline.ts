@@ -6,6 +6,7 @@ import type { Plugin } from "vite";
 import { scanArticles } from "../src/lib/content-index";
 import { buildRssXml, type RssPost } from "../src/lib/rss";
 import { site } from "../src/lib/site";
+import { buildRobotsTxt, buildSitemapXml, type SitemapEntry } from "../src/lib/sitemap";
 
 const CLIENT_DIR = resolve(process.cwd(), "build/client");
 
@@ -216,6 +217,26 @@ export function magpiePipeline(): Plugin {
           date: article.frontmatter.date,
         }));
         await writeFile(resolve(CLIENT_DIR, "rss.xml"), buildRssXml(posts, site), "utf8");
+
+        // Sitemap mirrors the prerender manifest one-to-one; article pages use
+        // their frontmatter date as lastmod, fixed routes the build day.
+        const buildDay = new Date().toISOString().slice(0, 10);
+        const sitemapEntries: SitemapEntry[] = [
+          { path: "/", lastmod: buildDay },
+          { path: "/files", lastmod: buildDay },
+          { path: "/lab", lastmod: buildDay },
+          { path: "/about", lastmod: buildDay },
+          ...articles.map((article) => ({
+            path: `/files/${article.slug}`,
+            lastmod: article.frontmatter.date,
+          })),
+        ];
+        await writeFile(
+          resolve(CLIENT_DIR, "sitemap.xml"),
+          buildSitemapXml(sitemapEntries, site),
+          "utf8",
+        );
+        await writeFile(resolve(CLIENT_DIR, "robots.txt"), buildRobotsTxt(site), "utf8");
       },
     },
   };
