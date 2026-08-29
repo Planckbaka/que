@@ -25,19 +25,22 @@ const lenis = await page.evaluate(() => ({
 }));
 check("lenis mount + page scrollable", lenis.scrollable, `lenis class: ${lenis.hasClass}`);
 
-// 1. AnagramText resolves (scrambled -> ATTICUS PUND)
+// 1. AnagramText resolves (scrambled -> PYE HALL on the cover). Anchor on the
+// sr-only copy, read the live aria-hidden sibling.
 const anagram = await page.evaluate(async () => {
-  const el = [...document.querySelectorAll("h1, h2, p, span")].find((n) =>
-    n.textContent?.includes("ATTICUS"),
+  const anchor = [...document.querySelectorAll("span.sr-only")].find(
+    (n) => n.textContent === "PYE HALL",
   );
-  if (!el) return { found: false };
-  const first = el.textContent;
+  if (!anchor) return { found: false };
+  const live = anchor.nextElementSibling;
+  if (!live) return { found: false };
+  const first = live.textContent;
   await new Promise((r) => setTimeout(r, 2600));
-  return { found: true, first, settled: el.textContent };
+  return { found: true, first, settled: live.textContent };
 });
 check(
   "anagram resolves to stable text",
-  anagram.found && anagram.settled?.includes("ATTICUS"),
+  anagram.found && anagram.settled === "PYE HALL",
   `first="${anagram.first?.slice(0, 24)}" settled="${anagram.settled?.slice(0, 24)}"`,
 );
 
@@ -65,14 +68,31 @@ check(
   `anim=${tape.animName} state=${tape.state}`,
 );
 
-// 3. Typewriter types
+// 3. Typewriter types on the lab page (progresses between two samples)
+await page.goto(BASE + "/lab", { waitUntil: "networkidle" });
+await page.waitForTimeout(1200);
 const typewriter = await page.evaluate(async () => {
-  const candidates = [...document.querySelectorAll("*")].filter(
-    (n) => n.textContent?.includes("EVERY FILE BEGINS") || n.textContent?.includes("typewriter"),
-  );
-  return { count: candidates.length };
+  const findAnchor = () =>
+    [...document.querySelectorAll("span.sr-only")].find((n) =>
+      /^every file begins/i.test(n.textContent ?? ""),
+    );
+  let anchor = findAnchor();
+  for (let i = 0; i < 20 && !anchor; i++) {
+    await new Promise((r) => setTimeout(r, 200));
+    anchor = findAnchor();
+  }
+  if (!anchor) return { found: false };
+  const live = anchor.nextElementSibling;
+  if (!live) return { found: false };
+  const first = live.textContent;
+  await new Promise((r) => setTimeout(r, 1500));
+  return { found: true, first, after: live.textContent };
 });
-check("typewriter demo present on page", typewriter.count > 0, `nodes: ${typewriter.count}`);
+check(
+  "typewriter types forward",
+  typewriter.found && (typewriter.after?.length ?? 0) > (typewriter.first?.length ?? 0),
+  `"${typewriter.first?.slice(0, 30)}" -> "${typewriter.after?.slice(0, 30)}"`,
+);
 
 // 4. HorizontalRail scrubs translateX with vertical scroll
 const rail = await page.evaluate(async () => {
@@ -186,12 +206,15 @@ check(
   veilUrl + ` linkPresent=${link}`,
 );
 
-// 9. Search UI degrades or works (no crash)
+// 9. Search UI present on the archive wall (or politely degraded in dev)
+await page.goto(BASE + "/files", { waitUntil: "networkidle" });
+await page.waitForTimeout(900);
 const search = await page.evaluate(() => {
   const input = document.querySelector('input[aria-label="Search the archive"]');
-  return { present: Boolean(input) };
+  const notice = document.body.textContent?.includes("Index unavailable in this printing");
+  return { present: Boolean(input) || Boolean(notice) };
 });
-check("archive search input present", search.present);
+check("archive search present or degraded", search.present);
 
 check("no console errors", consoleErrors.length === 0, consoleErrors.join(" | ").slice(0, 200));
 
