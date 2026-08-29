@@ -45,13 +45,19 @@ export function ArchiveSearch() {
   useEffect(() => {
     let cancelled = false;
     // @vite-ignore: the chunk lives at the deployed root, not in the module
-    // graph — the runtime resolves it against the page origin.
+    // graph — the runtime resolves it against the page origin. Fetch first so
+    // dev servers (SPA-fallback HTML instead of the chunk) degrade silently
+    // instead of throwing module-MIME errors into the console.
     const chunk = "/pagefind/pagefind.js";
-    import(/* @vite-ignore */ chunk)
-      .then((mod: { default?: PagefindApi }) => {
+    fetch(chunk)
+      .then((res) => {
+        const type = res.headers.get("content-type") ?? "";
+        if (!res.ok || !type.includes("javascript")) throw new Error("no pagefind index");
+        return import(/* @vite-ignore */ chunk) as Promise<{ default?: PagefindApi }>;
+      })
+      .then((mod) => {
         if (cancelled) return;
-        const api = mod.default ?? (mod as unknown as PagefindApi);
-        setPagefind(api);
+        setPagefind(mod.default ?? (mod as unknown as PagefindApi));
       })
       .catch(() => {
         if (!cancelled) setAvailable(false);

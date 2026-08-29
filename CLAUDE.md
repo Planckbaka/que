@@ -20,6 +20,7 @@ npm run lint:fix     # biome check --write . (formatter + fixer)
 npm run typecheck    # tsc -b --noEmit
 npm test             # vitest run
 npx vitest run src/__tests__/showcase.test.tsx   # single file
+node scripts/animation-check.mjs [baseURL]       # drive every motion primitive in a real browser (needs `npx vite preview`/`npm run dev` + playwright devDep)
 ```
 
 Note: `build/` and `.react-router/` are generated artifacts (git-ignored).
@@ -78,3 +79,4 @@ Root provider tree (in `src/root.tsx`): `WorldProvider > SmoothScroll > VeilProv
 - World-scoped gotchas learned the hard way: Tailwind `@theme inline` vars freeze at `:root` (custom CSS must reference the underlying token — `var(--line)`, not `var(--color-line)`); cards need the `.on-card` scope so muted labels flip with the card surface; world-scoped sections must paint `bg-background` or light text lands on a parent's red.
 - Route `meta()` exports: root owns only the default title; every leaf ships its own title + description + `socialMeta(...)` (OG/Twitter) to avoid duplicate description tags.
 - Mobile: `html/body { overflow-x: clip }` guards against decorative bleed; verify full-page screenshot widths at 390px when adding monuments.
+- Client-safe module rule: anything imported by `src/lib/content.ts`/`frontmatter.ts` ships to the browser — no node-only deps there (reading-time's CJS entry pulls `node:stream/util` and hard-crashes `npm run dev`; it lives in `content-index.ts`, and reading minutes reach the client via the virtual module). Rollup hides this class of bug at build time — **always smoke `npm run dev` too**.
