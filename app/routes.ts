@@ -4,5 +4,6 @@ import { index, type RouteConfig, route } from "@react-router/dev/routes";
 
 export default [
   index("../src/pages/ShowcasePage.tsx"),
+  route("files/:slug", "../src/pages/FilePage.tsx"),
   route("*", "../src/pages/NotFoundRedirect.tsx"),
 ] satisfies RouteConfig;
