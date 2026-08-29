@@ -67,7 +67,7 @@ function Hero() {
               <AnagramText text="PYE HALL" />
             </span>
           </h1>
-          <p className="mt-7 max-w-md text-lg leading-relaxed text-paper/90">
+          <p className="mt-7 max-w-md text-lg leading-relaxed text-paper">
             A murder within the murder. The final chapter is missing, the author is dead, and every
             magpie on the lawn is counting something.
           </p>
@@ -89,7 +89,7 @@ function Hero() {
           <Manor className="absolute -bottom-16 -left-24 w-44 text-paper opacity-90" />
         </motion.div>
       </div>
-      <p className="absolute bottom-5 left-6 font-machine text-[11px] uppercase tracking-[0.28em] text-paper/70 md:left-10">
+      <p className="absolute bottom-5 left-6 font-machine text-[11px] uppercase tracking-[0.28em] text-paper md:left-10">
         Folio 01 · Two Worlds, One Story
       </p>
     </section>
@@ -102,13 +102,13 @@ function WorldDivider() {
     <section aria-label="World toggle" className="relative grid grid-cols-2 border-y-2 border-ink">
       <div className="bg-blood p-8 text-paper md:p-12">
         <p className="font-display text-xl uppercase tracking-wide md:text-2xl">Author World</p>
-        <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper/75">
+        <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper">
           Reality · Susan Ryeland
         </p>
       </div>
       <div className="bg-ink p-8 text-right text-paper md:p-12">
         <p className="font-display text-xl uppercase tracking-wide md:text-2xl">Detective World</p>
-        <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper/65">
+        <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper">
           Fiction · Atticus Pünd
         </p>
       </div>
@@ -136,11 +136,11 @@ function RailDemo() {
       {EXHIBITS.map((ex) => (
         <figure
           key={ex.badge}
-          className="w-[70vw] shrink-0 border-2 border-line bg-card p-8 shadow-print"
+          className="on-card w-[70vw] shrink-0 border-2 border-line bg-card p-8 text-card-foreground shadow-print"
         >
           {ex.art}
           <p className="mt-6 text-lg italic">{ex.title}</p>
-          <p className="mt-2 text-base italic opacity-70">{ex.date}</p>
+          <p className="mt-2 text-base italic text-muted-foreground">{ex.date}</p>
           <figcaption className="mt-2 font-machine text-xs uppercase tracking-[0.25em]">
             {ex.badge}
           </figcaption>
@@ -156,7 +156,7 @@ function SeamDemo() {
       left={
         <div className="flex h-full flex-col justify-center p-8 md:p-12">
           <p className="font-display text-xl uppercase tracking-wide md:text-2xl">Author World</p>
-          <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper/75">
+          <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper">
             Drag the seam, or use the arrow keys
           </p>
         </div>
@@ -166,7 +166,7 @@ function SeamDemo() {
           <p className="font-display text-xl uppercase tracking-wide md:text-2xl">
             Detective World
           </p>
-          <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper/65">
+          <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper">
             Two worlds, one fold
           </p>
         </div>
