@@ -1,13 +1,20 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import readingTime from "reading-time";
 import { parse as parseYaml } from "yaml";
 import {
   compareNewestFirst,
   type FileFrontmatter,
   FileFrontmatterSchema,
-  readingMinutes,
   slugFromFile,
 } from "./frontmatter";
+
+// Node-only helper. reading-time lives HERE, not in client-shared
+// frontmatter.ts: its CJS entry requires node:stream/util, which crashes the
+// dev server the moment the client graph pulls it in.
+function readingMinutes(body: string): number {
+  return Math.max(1, Math.round(readingTime(body).minutes));
+}
 
 export type ScannedArticle = {
   slug: string;

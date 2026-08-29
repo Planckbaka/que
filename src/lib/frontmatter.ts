@@ -1,9 +1,10 @@
-import readingTime from "reading-time";
 import { z } from "zod";
 
 // Single source of truth for case-file frontmatter (spec §4.1). Both content
 // readers — the Node-side fs scanner and the client-side glob collection —
 // validate through this schema, so a slug rule or field change happens once.
+// Keep this module client-safe: no node-only imports (reading-time's CJS entry
+// pulls node:stream/util and breaks `npm run dev` if bundled for the browser).
 export const FileFrontmatterSchema = z.object({
   title: z.string().min(1),
   kicker: z.string().min(1),
@@ -24,10 +25,6 @@ export function slugFromFile(filename: string): string {
     throw new Error(`content files must be .mdx, got: ${filename}`);
   }
   return filename.slice(0, -".mdx".length);
-}
-
-export function readingMinutes(body: string): number {
-  return Math.max(1, Math.round(readingTime(body).minutes));
 }
 
 export function compareNewestFirst(
