@@ -7,6 +7,7 @@ export default [
     index("../src/pages/ShowcasePage.tsx"),
     route("files", "../src/pages/FilesPage.tsx"),
     route("files/:slug", "../src/pages/FilePage.tsx"),
+    route("lab", "../src/pages/LabPage.tsx"),
   ]),
   route("*", "../src/pages/NotFoundRedirect.tsx"),
 ] satisfies RouteConfig;

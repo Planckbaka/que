@@ -13,6 +13,7 @@ export default {
     return [
       "/",
       "/files",
+      "/lab",
       ...articles
         .filter((article) => !article.frontmatter.draft)
         .map((article) => `/files/${article.slug}`),
