@@ -48,6 +48,14 @@
     scroll-behavior: smooth;
   }
 
+  /* Monumental decorations (outlined numerals, silhouettes) intentionally bleed
+     past the viewport edge; clip the overflow without creating a scroll
+     container that would break sticky sections. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);

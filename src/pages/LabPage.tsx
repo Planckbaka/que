@@ -15,16 +15,15 @@ import { TypewriterText } from "@/components/motion/TypewriterText";
 import { LinkUnderVeil } from "@/components/motion/Veil";
 import { useWorld } from "@/components/motion/WorldWipe";
 import { Switch } from "@/components/ui/switch";
-import { site } from "@/lib/site";
+import { site, socialMeta } from "@/lib/site";
 
 export function meta() {
+  const description =
+    "The motion showroom: every transition primitive in The Magpie Files, live under glass.";
   return [
     { title: `Evidence Lab · ${site.title}` },
-    {
-      name: "description",
-      content:
-        "The motion showroom: every transition primitive in The Magpie Files, live under glass.",
-    },
+    { name: "description", content: description },
+    ...socialMeta({ title: "Evidence Lab", description }),
   ];
 }
 

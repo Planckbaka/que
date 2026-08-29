@@ -5,11 +5,11 @@ import { ChapterNumeral } from "@/components/motion/ChapterNumeral";
 import { ReadingFolio } from "@/components/motion/ReadingFolio";
 import { getArticle, publishedArticles } from "@/lib/content";
 import { romanNumeral } from "@/lib/motion";
-import { site } from "@/lib/site";
+import { site, socialMeta } from "@/lib/site";
 
 // Minimal case-file reader (P2 pipeline proof). P3 replaces this with the full
 // 正文模板: _seo layout, Folio reading progress, RunningHead/Footer chrome.
-export function meta({ params }: { params: { slug?: string } }) {
+export function meta({ params }: { params: { slug?: string } }): Array<Record<string, string>> {
   const article = getArticle(params.slug ?? "");
   if (!article) {
     return [{ title: `Sealed File · ${site.title}` }];
@@ -20,10 +20,12 @@ export function meta({ params }: { params: { slug?: string } }) {
     { name: "description", content: fm.summary },
     { tagName: "link", rel: "canonical", href: `${site.url}/files/${article.slug}` },
     { property: "og:type", content: "article" },
-    { property: "og:title", content: fm.title },
-    { property: "og:description", content: fm.summary },
     { property: "og:url", content: `${site.url}/files/${article.slug}` },
-    { property: "og:image", content: `${site.url}/og/${article.slug}.png` },
+    ...socialMeta({
+      title: fm.title,
+      description: fm.summary,
+      image: `${site.url}/og/${article.slug}.png`,
+    }),
   ];
 }
 
