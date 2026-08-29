@@ -9,6 +9,7 @@ import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { defineConfig } from "vitest/config";
 import { magpieCaseFiles } from "./scripts/magpie-content";
+import { magpiePipeline } from "./scripts/magpie-pipeline";
 import { inkTheme, paperTheme } from "./src/lib/code-themes";
 
 export default defineConfig({
@@ -44,6 +45,7 @@ export default defineConfig({
       ],
     }),
     magpieCaseFiles(),
+    magpiePipeline(),
     ...(process.env.VITEST ? [] : [reactRouter()]),
     tailwindcss(),
   ],
