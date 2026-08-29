@@ -35,7 +35,8 @@ describe("AboutPage (Colophon)", () => {
     renderAbout();
     expect(screen.getByText(/Set in/i)).toBeTruthy();
     expect(screen.getByText(/Anton · Crimson Pro · Courier Prime/)).toBeTruthy();
-    expect(screen.getByText(/Printed in three inks/i)).toBeTruthy();
+    expect(screen.getByText("Printed in")).toBeTruthy();
+    expect(screen.getByText(/three inks — vermillion, warm ink, aged paper/)).toBeTruthy();
     expect(screen.getByText(/Motion engine/i)).toBeTruthy();
   });
 

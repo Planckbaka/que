@@ -1,21 +1,27 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
+import { VeilProvider } from "@/components/motion/Veil";
 import { WorldProvider } from "@/components/motion/WorldWipe";
 import ShowcasePage from "@/pages/ShowcasePage";
 
 function Page() {
   return (
-    <WorldProvider>
-      <ShowcasePage />
-    </WorldProvider>
+    <MemoryRouter>
+      <WorldProvider>
+        <VeilProvider>
+          <ShowcasePage />
+        </VeilProvider>
+      </WorldProvider>
+    </MemoryRouter>
   );
 }
 
 describe("ShowcasePage", () => {
   it("renders the hero title and case furniture", async () => {
     render(<Page />);
-    expect(screen.getByText(/The Case of/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/The Case of/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/CASE 1954-PYE REOPENED/i).length).toBeGreaterThan(0);
     await waitFor(() => expect(screen.getByText("PYE HALL")).toBeInTheDocument());
   });
@@ -46,5 +52,16 @@ describe("ShowcasePage", () => {
     expect(
       screen.getByRole("separator", { name: "Drag to resize the two worlds" }),
     ).toBeInTheDocument();
+  });
+
+  it("points the cover at the latest archive entries", () => {
+    render(<Page />);
+    expect(screen.getAllByText(/FROM THE ARCHIVE/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: /the case of the blazing build/i })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /attention is a witness/i })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /the case of the vanishing gradient/i })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Open the archive/i }).getAttribute("href")).toBe(
+      "/files",
+    );
   });
 });

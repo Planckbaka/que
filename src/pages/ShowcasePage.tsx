@@ -21,6 +21,7 @@ import { PageFlutter } from "@/components/motion/PageFlutter";
 import { PressTape } from "@/components/motion/PressTape";
 import { StaggerList } from "@/components/motion/StaggerList";
 import { TypewriterText } from "@/components/motion/TypewriterText";
+import { LinkUnderVeil } from "@/components/motion/Veil";
 import { useWorld } from "@/components/motion/WorldWipe";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { publishedArticles } from "@/lib/content";
 import { site } from "@/lib/site";
 
 export function meta() {
@@ -367,6 +369,43 @@ function CounterSection() {
   );
 }
 
+function ArchiveEntry() {
+  return (
+    <section data-world="red" className="border-t-2 border-ink bg-background px-6 py-16 md:px-10">
+      <div className="mx-auto max-w-[76rem]">
+        <p className="font-machine text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
+          From the Archive · 最新档案
+        </p>
+        <h2 className="mt-3 font-display text-4xl uppercase md:text-5xl">Recently Filed</h2>
+        <div className="mt-10 grid gap-8 md:grid-cols-3">
+          {publishedArticles.slice(0, 3).map((entry) => (
+            <LinkUnderVeil
+              key={entry.slug}
+              to={`/files/${entry.slug}`}
+              className="block border-2 border-line bg-card p-6 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-1"
+            >
+              <p className="font-machine text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+                {entry.frontmatter.kicker}
+              </p>
+              <h3 className="mt-2 font-display text-2xl uppercase leading-none">
+                {entry.frontmatter.title}
+              </h3>
+              <p className="mt-4 font-machine text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Filed {entry.frontmatter.date} · {entry.readingTimeMinutes} min read
+              </p>
+            </LinkUnderVeil>
+          ))}
+        </div>
+        <div className="mt-10">
+          <Button variant="type" size="sm" asChild>
+            <LinkUnderVeil to="/files">Open the archive</LinkUnderVeil>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function ShowcasePage() {
   return (
     <div id="top" className="min-h-svh">
@@ -380,6 +419,7 @@ export default function ShowcasePage() {
         <EvidenceLocker />
         <CaseNotes />
         <CounterSection />
+        <ArchiveEntry />
       </main>
     </div>
   );
