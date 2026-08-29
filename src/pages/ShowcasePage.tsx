@@ -1,5 +1,4 @@
 import { motion } from "motion/react";
-import { BookSpine } from "@/components/magpie/BookSpine";
 import { ChapterHeading } from "@/components/magpie/ChapterHeading";
 import { ClueChip } from "@/components/magpie/ClueChip";
 import { HalftoneImage } from "@/components/magpie/HalftoneImage";
@@ -43,15 +42,6 @@ export function meta() {
     { title: `${site.title} · 喜鹊档案` },
     { name: "description", content: site.description },
   ];
-}
-
-function RunningHead() {
-  return (
-    <header className="flex items-baseline justify-between border-b border-foreground/30 px-6 py-3 font-machine text-[11px] font-bold uppercase tracking-[0.28em] text-muted-foreground md:px-10">
-      <span>The Magpie Files · 喜鹊档案</span>
-      <span className="hidden sm:inline">Case No. 1954-PYE</span>
-    </header>
-  );
 }
 
 function Hero() {
@@ -377,51 +367,10 @@ function CounterSection() {
   );
 }
 
-function Footer() {
-  return (
-    <footer data-world="red" className="border-t-2 border-ink bg-background text-foreground">
-      <div className="mx-auto grid max-w-[76rem] gap-12 px-6 py-16 sm:grid-cols-[auto_1fr_auto] md:px-10">
-        <div className="flex gap-4">
-          <BookSpine label="Anton" className="h-44" />
-          <BookSpine label="Crimson Pro" className="h-52" />
-          <BookSpine label="Courier Prime" className="h-40" />
-        </div>
-        <div className="space-y-2 self-center font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-          <p>The Magpie Files — a design system study</p>
-          <p>After the main titles by HUGE Designs (2022)</p>
-          <p>Set in Anton · Crimson Pro · Courier Prime</p>
-        </div>
-        <nav className="flex flex-col items-start gap-3 sm:items-end" aria-label="Colophon links">
-          <Button variant="type" size="sm" asChild>
-            <a href="#top">Back to cover</a>
-          </Button>
-          <Button variant="type" size="sm" asChild>
-            <a href="#evidence">Evidence</a>
-          </Button>
-        </nav>
-      </div>
-      <div className="border-t border-border">
-        <div className="mx-auto flex max-w-[76rem] items-center justify-between px-6 py-3 font-machine text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground md:px-10">
-          <span>Folio ∞</span>
-          <motion.span
-            animate={{ y: [0, -4, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="inline-block"
-          >
-            <Magpie className="size-5" />
-          </motion.span>
-          <span>Printed nowhere</span>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 export default function ShowcasePage() {
   return (
     <div id="top" className="min-h-svh">
       <PaperGrain />
-      <RunningHead />
       <main>
         <Hero />
         <WorldDivider />
@@ -432,7 +381,6 @@ export default function ShowcasePage() {
         <CaseNotes />
         <CounterSection />
       </main>
-      <Footer />
     </div>
   );
 }

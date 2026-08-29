@@ -120,6 +120,41 @@
   animation-play-state: paused;
 }
 
+/* Shiki dual themes (spec §4.2): compiled HTML carries the paper theme inline
+   plus --shiki-dark variables. The black world flips via CSS variables only —
+   no re-highlight, no repaint flicker. !important is required: token spans and
+   the pre carry their light-theme colors as inline styles. */
+[data-world="black"] .shiki span {
+  color: var(--shiki-dark) !important;
+}
+
+[data-world="black"] .shiki {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+/* Print-style line numbers via CSS counter (spec §4.2). */
+.shiki code {
+  counter-reset: line;
+  display: block;
+}
+
+.shiki .line {
+  display: block;
+}
+
+.shiki .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2.5ch;
+  margin-right: 1.5ch;
+  text-align: right;
+  font-family: var(--font-machine);
+  opacity: 0.4;
+  user-select: none;
+}
+
 /* Case-file article typography (P2 content pipeline; P3 adds Folio chrome). */
 /* Muted labels inside the folio card follow the card foreground (ink on red
    world, paper on black), not the world foreground — otherwise red-world
@@ -195,41 +230,6 @@
   background: color-mix(in srgb, var(--color-ink) 8%, transparent);
   padding: 0.15em 0.4em;
   border: 1px solid color-mix(in srgb, var(--color-line) 45%, transparent);
-}
-
-/* Shiki dual themes (spec §4.2): compiled HTML carries the paper theme inline
-   plus --shiki-dark variables. The black world flips via CSS variables only —
-   no re-highlight, no repaint flicker. !important is required: token spans and
-   the pre carry their light-theme colors as inline styles. */
-[data-world="black"] .shiki span {
-  color: var(--shiki-dark) !important;
-}
-
-[data-world="black"] .shiki {
-  color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
-}
-
-/* Print-style line numbers via CSS counter (spec §4.2). */
-.shiki code {
-  counter-reset: line;
-  display: block;
-}
-
-.shiki .line {
-  display: block;
-}
-
-.shiki .line::before {
-  counter-increment: line;
-  content: counter(line);
-  display: inline-block;
-  width: 2.5ch;
-  margin-right: 1.5ch;
-  text-align: right;
-  font-family: var(--font-machine);
-  opacity: 0.4;
-  user-select: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

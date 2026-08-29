@@ -16,7 +16,7 @@ describe("ShowcasePage", () => {
   it("renders the hero title and case furniture", async () => {
     render(<Page />);
     expect(screen.getByText(/The Case of/i)).toBeInTheDocument();
-    expect(screen.getByText(/Case No\. 1954-PYE/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/CASE 1954-PYE REOPENED/i).length).toBeGreaterThan(0);
     await waitFor(() => expect(screen.getByText("PYE HALL")).toBeInTheDocument());
   });
 
