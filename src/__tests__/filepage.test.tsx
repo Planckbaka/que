@@ -45,6 +45,19 @@ describe("FilePage", () => {
     expect(blocks.length).toBeGreaterThanOrEqual(2);
   });
 
+  it("mounts the reading folio at one page per reading minute", () => {
+    renderAtSlug("the-case-of-the-blazing-build");
+    expect(screen.getByText("Folio 01 ∕ 03")).toBeTruthy();
+    const bar = screen.getByRole("progressbar", { name: "Reading progress" });
+    expect(bar.getAttribute("aria-valuemax")).toBe("3");
+  });
+
+  it("stamps the article's chapter numeral behind the folio", () => {
+    renderAtSlug("the-case-of-the-blazing-build");
+    const numerals = document.querySelectorAll("span.text-outline");
+    expect([...numerals].some((el) => el.textContent === "I")).toBe(true);
+  });
+
   it("shows the sealed notice for draft case files", () => {
     renderAtSlug("sealed-testimony-of-the-overfitted-witness");
     expect(screen.getByText(/SEALED FILE/i)).toBeTruthy();
