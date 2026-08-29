@@ -382,7 +382,7 @@ function ArchiveEntry() {
             <LinkUnderVeil
               key={entry.slug}
               to={`/files/${entry.slug}`}
-              className="block border-2 border-line bg-card p-6 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-1"
+              className="on-card block border-2 border-line bg-card p-6 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-1"
             >
               <p className="font-machine text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
                 {entry.frontmatter.kicker}

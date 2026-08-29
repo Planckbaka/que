@@ -64,7 +64,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <dl className="h-fit border-2 border-line bg-card p-8 text-card-foreground shadow-print">
+          <dl className="on-card h-fit border-2 border-line bg-card p-8 text-card-foreground shadow-print">
             {EDITION.map(([term, detail]) => (
               <div
                 key={term}

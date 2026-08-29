@@ -156,11 +156,11 @@
 }
 
 /* Case-file article typography (P2 content pipeline; P3 adds Folio chrome). */
-/* Muted labels inside the folio card follow the card foreground (ink on red
-   world, paper on black), not the world foreground — otherwise red-world
-   cards render light-on-light. */
-.case-file .text-muted-foreground {
-  color: color-mix(in srgb, var(--color-card-foreground) 62%, transparent);
+/* Muted labels inside any paper/ink card follow the card foreground (ink on
+   red world, paper on black), not the world foreground — otherwise red-world
+   cards render light-on-light. Cards opt in with the on-card class. */
+.on-card .text-muted-foreground {
+  color: color-mix(in srgb, var(--on-surface) 62%, transparent);
 }
 
 .case-file p {
@@ -205,7 +205,7 @@
 }
 
 .case-file li::marker {
-  color: var(--color-primary);
+  color: var(--accent);
 }
 
 .case-file figure {
@@ -214,11 +214,11 @@
 
 .case-file pre {
   margin-block: 1.5rem;
-  border: 2px solid var(--color-line);
+  border: 2px solid var(--line);
   background: color-mix(in srgb, var(--color-ink) 4%, transparent);
   padding: 1rem 1.25rem;
   overflow-x: auto;
-  box-shadow: 3px 3px 0 0 var(--color-line);
+  box-shadow: 3px 3px 0 0 var(--line);
   font-family: var(--font-machine);
   font-size: 0.8125rem;
   line-height: 1.7;
@@ -229,7 +229,7 @@
   font-size: 0.85em;
   background: color-mix(in srgb, var(--color-ink) 8%, transparent);
   padding: 0.15em 0.4em;
-  border: 1px solid color-mix(in srgb, var(--color-line) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--line) 45%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
