@@ -1,8 +1,9 @@
 // vite.config.ts
-import mdx from "@mdx-js/rollup";
-import rehypeShiki from "@shikijs/rehype";
+
 import { fileURLToPath, URL } from "node:url";
+import mdx from "@mdx-js/rollup";
 import { reactRouter } from "@react-router/dev/vite";
+import rehypeShiki from "@shikijs/rehype";
 import tailwindcss from "@tailwindcss/vite";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";

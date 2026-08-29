@@ -1,0 +1,90 @@
+---
+title: The Case of the Blazing Build
+kicker: Engineering Notes · Docket 2026-081
+world: red
+tags: [go, infrastructure, ci]
+summary: A 14-minute Go CI build walked into my workshop. It walked out at 90 seconds. No new hardware, one cache, and a refusal to compile the world twice.
+date: 2026-08-21
+---
+
+This is an engineering note, not a fairy tale — in the red world we file evidence, not clues. The subject: a Go monorepo whose CI build had crept from four minutes to fourteen over eighteen months, in increments small enough that each one looked reasonable on its own. Creep is how pipelines die. Nobody decides to be slow; they just decide *one more time*.
+
+## Establishing the Baseline
+
+First law of build forensics: measure before you optimize. Go ships the instrument — the build cache is content-addressed, and every miss tells you *why* it missed:
+
+```bash
+go build -gcflags="-m" ./... 2> escape.log    # compiler decisions, on the record
+GODEBUG=gocachehash=1 go build ./... 2> hash.log
+go test -count=1 ./...   # -count=1 bypasses the test cache; use sparingly
+```
+
+The `gocachehash` trace showed the real problem immediately: our generated protobuf packages were re-hashed on every run because the generation step wrote files with fresh timestamps and *nondeterministic field ordering*. The cache thought the package had changed. The package had not changed. Fourteen minutes of CI was recompiling evidence the case had already processed.
+
+## The Two-Compile Crime
+
+A second trace revealed the classic double-billing: the same internal package was compiled twice — once for the binary target, once inside a `go test` invocation with different build flags. In Go, the build cache keys on the full flag set, so "same code, different flags" is a different artifact, paid twice:
+
+```go
+package builder
+
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+)
+
+// BuildKey returns the cache key Go would derive for a target: source hash
+// plus the complete flag set. Two invocations with equal keys compile once.
+func BuildKey(target string, flags []string) string {
+	trimmed := make([]string, 0, len(flags))
+	for _, f := range flags {
+		if f != "" {
+			trimmed = append(trimmed, f)
+		}
+	}
+	return target + ":" + strings.Join(trimmed, ",")
+}
+
+func Build(target string, flags []string) error {
+	key := BuildKey(target, flags)
+	if cached, ok := remote.Get(key); ok {
+		fmt.Printf("cache hit: %s\n", key)
+		return nil
+	}
+	args := append([]string{"build"}, flags...)
+	args = append(args, "./"+target)
+	cmd := exec.Command("go", args...)
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	return cmd.Run()
+}
+```
+
+The fix was boring and total: one canonical flag set per target, declared in a single `//go:build` tool file, consumed by both CI and local scripts. When two pipelines build the same target, they must not merely *usually* agree on flags — they must share the declaration.
+
+## The Cache That Paid Rent
+
+With inputs deterministic, the shared module cache went from decorative to load-bearing:
+
+```bash
+# .github/workflows/ci.yml (excerpt)
+- uses: actions/setup-go@v5
+  with:
+    go-version-file: go.mod
+    cache: true
+- run: go build ./...
+- run: go test -race ./...
+```
+
+Ninety seconds, warm. The remaining budget is dominated by `-race` tests, which deserve it — data races are the one suspect we never stop surveilling.
+
+## The Verdict
+
+Three rules survived the case, and they generalize past Go:
+
+1. **Determinism is the cache's contract.** A cache that misses on unchanged input is not a cache; it is a tax with extra steps.
+2. **One flag set, one declaration.** Duplicated build configuration is two artifacts wearing one trench coat.
+3. **Measure the miss, not the build.** Total time tells you that you are slow. The miss log tells you who did it.
+
+The magpie on the workshop windowsill counts: six for gold — gold, in this trade, being a green checkmark that arrives before your coffee cools.

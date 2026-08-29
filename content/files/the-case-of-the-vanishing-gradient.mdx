@@ -1,0 +1,84 @@
+---
+title: The Case of the Vanishing Gradient
+kicker: Algorithm Files · Case No. 017
+world: black
+tags: [deep-learning, optimization]
+summary: A detective story about a loss that refused to leave a trace. The chain rule testified; the sigmoid confessed; skip connections closed the case.
+date: 2026-07-14
+---
+
+The brief arrived on a rain-slick Tuesday: a twelve-layer network, trained for a week, whose early layers had learned *nothing at all*. Not badly — nothing. The weights of layer one sat exactly where initialization had left them, like furniture in a room nobody entered. Somebody upstream was committing a perfect crime, and the scene had no footprints.
+
+## The Chain Rule Takes the Stand
+
+Every backpropagation is a relay race. The gradient of the loss with respect to an early weight must pass through every layer between it and the output, and at each handoff the chain rule multiplies by one more local derivative — the loss gradient times the *product* of every per-layer sensitivity along the way.
+
+A product is an unforgiving witness. If each factor is even slightly less than one, the product collapses toward zero with exponential enthusiasm. Twelve layers at a modest 0.25 per handoff leaves you with roughly one part in sixteen million. The signal does not fade. It disappears.
+
+<ClueChip>sigmoid saturation</ClueChip>
+
+The first suspect was the activation. The sigmoid squashes the real line into (0, 1), and its derivative peaks at a mere 0.25 — attained only exactly at zero, then falling away in both directions. Push a pre-activation far enough and the neuron saturates: output flat, derivative dead, testimony inadmissible.
+
+```python
+import numpy as np
+
+def sigmoid(z: np.ndarray) -> np.ndarray:
+    return 1.0 / (1.0 + np.exp(-z))
+
+def sigmoid_prime(z: np.ndarray) -> np.ndarray:
+    s = sigmoid(z)
+    return s * (1.0 - s)
+
+# The confession, on the record:
+z = np.array([-6.0, -3.0, 0.0, 3.0, 6.0])
+for zi, d in zip(z, sigmoid_prime(z)):
+    print(f"z={zi:+.1f}  dσ/dz={d:.6f}")
+# z=-6.0  dσ/dz=0.002466   <- effectively mute
+# z=-3.0  dσ/dz=0.045177
+# z=+0.0  dσ/dz=0.250000   <- the best it ever offers
+# z=+3.0  dσ/dz=0.045177
+# z=+6.0  dσ/dz=0.002466   <- effectively mute
+```
+
+A ceiling of 0.25 per layer, *before* any saturation. Stack a dozen of those handoffs and the relay is over before it starts. The activation had motive and opportunity.
+
+## Surveillance Log
+
+We instrumented the network and watched the per-layer gradient norms during training. The tape told the story plainly:
+
+```typescript
+type LayerLog = { layer: number; gradNorm: number };
+
+function auditReport(logs: LayerLog[]): string {
+  const ratios = logs.slice(1).map((entry, i) => {
+    const previous = logs[i];
+    return `L${previous.layer}→L${entry.layer}: ×${(entry.gradNorm / previous.gradNorm).toFixed(4)}`;
+  });
+  return ["GRADIENT NORM RATIOS (descending):", ...ratios].join("\n");
+}
+
+// GRADIENT NORM RATIOS (descending):
+// L1→L2: ×0.2431
+// L2→L3: ×0.2388
+// L3→L4: ×0.2502
+// ...
+// L10→L11: ×0.2419
+// Every handoff ≈ 0.25. The product of the series: 4.1e-7.
+```
+
+The pattern repeated every layer like a signature. Whenever a quantity decays by a constant factor at each step of a fixed pipeline, stop hunting for a saboteur and start reading the product formula.
+
+## The Accomplice
+
+The sigmoid alone could not have done it. It needed an accomplice: initialization that started half the neurons deep inside saturation, and a loss surface whose early gradients had nothing to grip. <Redacted title="Sealed until the verdict">Together they ensured the product of handoff factors never exceeded 1e-6, so layer one's update rounds to zero in float32</Redacted> — a murder by rounding error, committed in broad daylight.
+
+## How the Case Was Closed
+
+Two exhibits broke it open:
+
+1. **Replacement of the suspect.** Rectified linear units keep their derivative at exactly 1 for the entire positive half-line. A relay of ones is a relay that finishes. The gradient arrives at layer one at full strength, attenuated only by the weights themselves.
+2. **The skip connection.** Instead of forcing the signal through every handoff, an identity path lets the gradient take the express lane around each block. The product formula still applies, but now one of its factors is 1 by construction. You cannot make a product vanish while it keeps a live wire to the output.
+
+The residual connection is not an architectural nicety. It is a *legal guarantee* — the chain rule's own escape hatch, written into the constitution of the network.
+
+The magpie count reads: three for a girl, four for a boy. In this file, one for sorrow — the sorrow of every dead neuron in layer one — and the rest, at last, for the gradient that made it home.

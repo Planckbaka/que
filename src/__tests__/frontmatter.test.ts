@@ -32,9 +32,7 @@ describe("FileFrontmatterSchema", () => {
   });
 
   it("rejects summaries over 160 characters", () => {
-    expect(() =>
-      FileFrontmatterSchema.parse({ ...valid, summary: "a".repeat(161) }),
-    ).toThrow();
+    expect(() => FileFrontmatterSchema.parse({ ...valid, summary: "a".repeat(161) })).toThrow();
   });
 
   it("rejects unknown worlds", () => {

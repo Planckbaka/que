@@ -1,8 +1,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import readingTime from "reading-time";
-import { FileFrontmatterSchema, slugFromFile, type FileFrontmatter } from "./frontmatter";
 import { parse as parseYaml } from "yaml";
+import { type FileFrontmatter, FileFrontmatterSchema, slugFromFile } from "./frontmatter";
 
 export type ScannedArticle = {
   slug: string;
@@ -52,7 +52,5 @@ export async function scanArticles(contentDir: string): Promise<ScannedArticle[]
     }),
   );
 
-  return articles.sort(
-    (a, b) => Date.parse(b.frontmatter.date) - Date.parse(a.frontmatter.date),
-  );
+  return articles.sort((a, b) => Date.parse(b.frontmatter.date) - Date.parse(a.frontmatter.date));
 }

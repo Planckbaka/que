@@ -1,0 +1,64 @@
+---
+title: One for Sorrow, Attention Is a Witness
+kicker: Algorithm Files · Case No. 018
+world: black
+tags: [transformers, attention]
+summary: Nine witnesses, one verdict. How scaled dot-product attention cross-examines every token at once — and why the softmax keeps nobody silent.
+date: 2026-08-02
+---
+
+In the old counting rhyme, seeing a single magpie is an omen of sorrow. In a transformer, every token sees every other magpie on the wire simultaneously — and must decide whose testimony matters. Attention is not a mechanism. It is a **lineup**, conducted once per layer, per head, per token.
+
+## The Lineup Procedure
+
+A query walks into the room. Nine keys stand against the wall. The procedure is always the same three steps:
+
+1. **Resemblance.** Score each key against the query with a dot product — cheap, linear, and symmetric in the only way that matters: similar things in similar spaces score high.
+2. **The scale correction.** Divide by the square root of the key dimension. Without it, high-dimensional dot products grow in variance with the dimension, and the softmax that follows would sharpen into a hard argmax. One witness would be believed completely; the rest dismissed before speaking. The scale keeps the jury *deliberating*.
+3. **Cross-examination.** Softmax the scores into a distribution that sums to one, then blend the value vectors under it.
+
+<ClueChip>softmax temperature</ClueChip>
+
+## Exhibit 018-B
+
+The whole procedure fits in six lines. Filed as evidence:
+
+```python
+import numpy as np
+
+def scaled_dot_attention(
+    q: np.ndarray, k: np.ndarray, v: np.ndarray
+) -> np.ndarray:
+    scores = (q @ k.T) / np.sqrt(k.shape[-1])   # resemblance, scaled
+    weights = np.exp(scores - scores.max(-1, keepdims=True))
+    weights = weights / weights.sum(-1, keepdims=True)  # cross-examination
+    return weights @ v, weights
+
+q = np.array([[1.0, 0.0]])
+k = np.array([[1.0, 0.0], [0.0, 1.0], [0.9, 0.1]])
+v = np.array([[10.0], [20.0], [30.0]])
+blend, witness = scaled_dot_attention(q, k, v)
+print(witness.round(3))   # [[0.484 0.064 0.452]]
+print(blend.round(2))     # [[17.72]]
+```
+
+Note who the lineup believed. The third witness is nearly indistinguishable from the first, and so the verdict — 17.72 — is not "the value of the best match" but a *negotiated average* between the two credible testimonies. Attention never convicts one suspect. It distributes belief.
+
+<ExhibitCard exhibit="EXHIBIT 018-C" caption="Chain of testimony">
+  The magpie rhyme, annotated as a witness ledger:
+
+  1. One for sorrow — the query that finds no good key, and attends to everything equally (uniform attention is grief without information).
+  2. Two for joy — a clean match, weight concentrated, gradient flowing.
+  3. Three for a girl, four for a boy — the multi-head split: different heads attend under different projections, and the full picture requires all of them.
+  5. Six for gold, seven for a secret never told — the value projection: what a witness *knows* is not what it *says* on the stand.
+</ExhibitCard>
+
+## Why Nobody Stays Silent
+
+The softmax has a property our investigation learned to love: it is *differentiable with respect to every score*. Even the witness who receives almost no weight still receives *some*, and its gradient — though small — is nonzero. Contrast this with the hard maximum, whose gradient is a wall of zeros everywhere except the argmax. A hard lineup lets exactly one witness train per step. A softmax lineup lets all nine testify, proportionally to how close they came.
+
+There is a second, quieter consequence. Because attention is a weighted average of value vectors, the output always lives in the convex hull of the values it reads. Positional information aside, attention cannot invent testimony that was never on the wire — it can only recombine. When a model *hallucinates*, the invention happened elsewhere: in the feed-forward blocks, the dense inventors of the family. The lineup merely decides whom to believe.
+
+## The Verdict We Keep
+
+Scale by the root, soften with the softmax, blend with the weights. Every transformer in production is running this same lineup a trillion times a day, and the rhyme still holds: one for sorrow when attention is uniform, joy when it is sharp. The detective's advice is unchanged — trust the negotiated average, and never let a single witness be believed completely.

@@ -4,6 +4,5 @@ export const site = {
   url: "https://themagpiefiles.pages.dev",
   title: "The Magpie Files",
   author: "Orion Arch",
-  description:
-    "The Magpie Files — engineering notes and algorithm case files by Orion Arch.",
+  description: "The Magpie Files — engineering notes and algorithm case files by Orion Arch.",
 } as const;
