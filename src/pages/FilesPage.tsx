@@ -4,16 +4,15 @@ import { useWorld, type World } from "@/components/motion/WorldWipe";
 import { ArchiveSearch } from "@/components/search/ArchiveSearch";
 import type { Article } from "@/lib/content";
 import { groupByWorld, publishedArticles } from "@/lib/content";
-import { site } from "@/lib/site";
+import { site, socialMeta } from "@/lib/site";
 
 export function meta() {
+  const description =
+    "Every case on public record — algorithm files from the black world, engineering notes from the red, grouped by world.";
   return [
     { title: `The Archive · ${site.title}` },
-    {
-      name: "description",
-      content:
-        "Every case on public record — algorithm files from the black world, engineering notes from the red, grouped by world.",
-    },
+    { name: "description", content: description },
+    ...socialMeta({ title: "The Archive", description }),
   ];
 }
 

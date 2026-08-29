@@ -37,12 +37,13 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { publishedArticles } from "@/lib/content";
-import { site } from "@/lib/site";
+import { site, socialMeta } from "@/lib/site";
 
 export function meta() {
   return [
     { title: `${site.title} · 喜鹊档案` },
     { name: "description", content: site.description },
+    ...socialMeta({ title: site.title, description: site.description }),
   ];
 }
 

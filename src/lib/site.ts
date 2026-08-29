@@ -10,3 +10,22 @@ export const site = {
   // comments: { repo: "Planckbaka/que", repoId: "...", category: "Marginalia", categoryId: "..." },
   comments: undefined,
 } as const;
+
+// Shared OG/Twitter card meta for route `meta()` exports. Routes without a
+// dedicated card fall back to the site card (build/client/og/index.png).
+export function socialMeta(input: {
+  title: string;
+  description: string;
+  image?: string;
+}): Array<Record<string, string>> {
+  const image = input.image ?? `${site.url}/og/index.png`;
+  return [
+    { property: "og:title", content: input.title },
+    { property: "og:description", content: input.description },
+    { property: "og:image", content: image },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: input.title },
+    { name: "twitter:description", content: input.description },
+    { name: "twitter:image", content: image },
+  ];
+}

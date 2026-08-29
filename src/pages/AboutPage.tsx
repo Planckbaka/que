@@ -1,16 +1,15 @@
 import { Magpie } from "@/components/magpie/silhouettes";
 import { ChapterNumeral } from "@/components/motion/ChapterNumeral";
 import { LinkUnderVeil } from "@/components/motion/Veil";
-import { site } from "@/lib/site";
+import { site, socialMeta } from "@/lib/site";
 
 export function meta() {
+  const description =
+    "The colophon: who writes The Magpie Files, how the edition is set, printed, and bound.";
   return [
     { title: `Colophon · ${site.title}` },
-    {
-      name: "description",
-      content:
-        "The colophon: who writes The Magpie Files, how the edition is set, printed, and bound.",
-    },
+    { name: "description", content: description },
+    ...socialMeta({ title: "Colophon", description }),
   ];
 }
 
