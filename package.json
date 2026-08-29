@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "react-router dev",
     "build": "tsc -b && react-router build && pagefind --site build/client",
-    "preview": "vite preview --outDir build/client",
+    "preview": "node scripts/preview.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc -b --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:browser": "node scripts/test-browser.mjs",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@fontsource/anton": "^5.2.5",
@@ -44,6 +46,7 @@
     "@types/node": "^24.2.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "@vitest/coverage-v8": "^3.2.7",
     "jsdom": "^26.1.0",
     "pagefind": "^1.5.2",
     "playwright": "^1.62.1",

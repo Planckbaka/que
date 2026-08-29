@@ -7,6 +7,7 @@ import { scanArticles } from "../src/lib/content-index";
 import { buildRssXml, type RssPost } from "../src/lib/rss";
 import { site } from "../src/lib/site";
 import { buildRobotsTxt, buildSitemapXml, type SitemapEntry } from "../src/lib/sitemap";
+import { stripModulePreloads } from "./strip-preloads";
 
 const CLIENT_DIR = resolve(process.cwd(), "build/client");
 
@@ -250,7 +251,7 @@ export function magpiePipeline(): Plugin {
           if (extname(entry) !== ".html") continue;
           const file = resolve(CLIENT_DIR, entry);
           const html = await readFile(file, "utf8");
-          const stripped = html.replaceAll(/<link rel="modulepreload"[^>]*\/>/g, "");
+          const stripped = stripModulePreloads(html);
           if (stripped !== html) {
             await writeFile(file, stripped, "utf8");
           }

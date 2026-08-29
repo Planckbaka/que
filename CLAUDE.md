@@ -20,7 +20,8 @@ npm run lint:fix     # biome check --write . (formatter + fixer)
 npm run typecheck    # tsc -b --noEmit
 npm test             # vitest run
 npx vitest run src/__tests__/showcase.test.tsx   # single file
-node scripts/animation-check.mjs [baseURL]       # drive every motion primitive in a real browser (needs `npx vite preview`/`npm run dev` + playwright devDep)
+npm run test:browser  # build artifact browser gate: serves build/client and drives every motion primitive (needs playwright devDep + Chrome)
+npm run test:coverage # vitest with v8 coverage (client-safe graph, pages, libs)
 ```
 
 Note: `build/` and `.react-router/` are generated artifacts (git-ignored).

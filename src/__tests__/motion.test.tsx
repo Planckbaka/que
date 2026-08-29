@@ -39,4 +39,43 @@ describe("TypewriterText", () => {
     });
     expect(container).toHaveTextContent("EXHIBIT A-113");
   });
+
+  it("shows nothing before the start delay, then types forward", () => {
+    const { container } = render(
+      <TypewriterText text="EXHIBIT A-113" speed={20} startDelay={100} />,
+    );
+    const live = () => container.querySelector('[aria-hidden="true"]');
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(live()?.textContent).toBe("");
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+    expect(live()?.textContent).toContain("EXHIB");
+  });
+
+  it("keeps the caret while typing and drops it once done", () => {
+    const { container } = render(
+      <TypewriterText text="EXHIBIT A-113" speed={20} startDelay={50} />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(50 + 5 * 20);
+    });
+    expect(container.querySelector(".caret-blink")).not.toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(50 + 14 * 20 + 200);
+    });
+    expect(container.querySelector(".caret-blink")).toBeNull();
+    expect(container).toHaveTextContent("EXHIBIT A-113");
+  });
+
+  it("never types past the text length", () => {
+    const { container } = render(<TypewriterText text="SHORT" speed={10} startDelay={0} />);
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    const live = container.querySelector('[aria-hidden="true"]');
+    expect(live?.textContent).toBe("SHORT");
+  });
 });

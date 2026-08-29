@@ -10,10 +10,12 @@ const check = (name, ok, detail = "") =>
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const consoleErrors = [];
+const logError = (kind, text) =>
+  consoleErrors.push(`[${page.url().replace(BASE, "")}] ${kind}: ${text}`);
 page.on("console", (msg) => {
-  if (msg.type() === "error") consoleErrors.push(msg.text().slice(0, 140));
+  if (msg.type() === "error") logError("console", msg.text().slice(0, 2400));
 });
-page.on("pageerror", (err) => consoleErrors.push(`pageerror: ${String(err).slice(0, 140)}`));
+page.on("pageerror", (err) => logError("pageerror", err.stack ?? String(err)));
 
 await page.goto(BASE + "/", { waitUntil: "networkidle" });
 await page.waitForTimeout(600);
@@ -43,6 +45,21 @@ check(
   anagram.found && anagram.settled === "PYE HALL",
   `first="${anagram.first?.slice(0, 24)}" settled="${anagram.settled?.slice(0, 24)}"`,
 );
+
+// 1b. Lenis wheel path: real-user scrolling advances smoothly (monotonic)
+const wheel = [];
+for (let i = 0; i < 4; i++) {
+  await page.mouse.wheel(0, 300);
+  await page.waitForTimeout(120);
+  wheel.push(await page.evaluate(() => Math.round(window.scrollY)));
+}
+check(
+  "lenis wheel scroll advances monotonically",
+  wheel.every((v, i) => i === 0 || v >= wheel[i - 1]) && wheel[3] > 0,
+  wheel.join(","),
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.waitForTimeout(400);
 
 // 2. PressTape CSS animation actually advances the track transform
 const tape = await page.evaluate(async () => {
@@ -216,7 +233,7 @@ const search = await page.evaluate(() => {
 });
 check("archive search present or degraded", search.present);
 
-check("no console errors", consoleErrors.length === 0, consoleErrors.join(" | ").slice(0, 200));
+check("no console errors", consoleErrors.length === 0, consoleErrors.join(" | ").slice(0, 2400));
 
 await browser.close();
 console.log(results.join("\n"));
