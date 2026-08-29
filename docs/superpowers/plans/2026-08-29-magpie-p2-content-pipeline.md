@@ -49,14 +49,14 @@
 
 **清单：**
 
-- [ ] **Step 1** 安装依赖：
+- [x] **Step 1** 安装依赖：
 ```bash
 npm i zod reading-time
 npm i -D @mdx-js/rollup remark-frontmatter remark-mdx-frontmatter shiki @shikijs/rehype yaml satori @resvg/resvg-js
 ```
-- [ ] **Step 2** 写失败测试：schema 三态（合法通过 / 缺 tags 抛错 / summary>160 抛错）；`slugFromFile("the-case-of-x.mdx")`；`scanArticles` 在 `fs.mkdtemp` 临时目录写入两篇（一篇合法、一篇缺 title）断言 throw 且消息含文件名；合法篇字段与 readingTime > 0。
-- [ ] **Step 3** 确认红灯后实现 `frontmatter.ts` / `content-index.ts` / `site.ts`，测试全绿。
-- [ ] **Step 4** 门禁四连（build/typecheck/test/lint），提交 `feat(content): frontmatter schema and build-side index (P2/T1)`。
+- [x] **Step 2** 写失败测试：schema 三态（合法通过 / 缺 tags 抛错 / summary>160 抛错）；`slugFromFile("the-case-of-x.mdx")`；`scanArticles` 在 `fs.mkdtemp` 临时目录写入两篇（一篇合法、一篇缺 title）断言 throw 且消息含文件名；合法篇字段与 readingTime > 0。
+- [x] **Step 3** 确认红灯后实现 `frontmatter.ts` / `content-index.ts` / `site.ts`，测试全绿。
+- [x] **Step 4** 门禁四连（build/typecheck/test/lint），提交 `feat(content): frontmatter schema and build-side index (P2/T1)`。
 
 ### Task 2: MDX 管线接入 + Shiki 双主题
 
@@ -73,9 +73,9 @@ npm i -D @mdx-js/rollup remark-frontmatter remark-mdx-frontmatter shiki @shikijs
 
 **清单：**
 
-- [ ] **Step 1** 写失败测试（调色审计）：遍历两主题全部 `settings[].settings` 的 color/background/fontColor 等 hex，归一化小写后断言 ∈ 允许集——白名单以 tokens.css 实值为准：`#f3eee3` `#e7dfcc` `#17120c` `#c8281e` `#e03a24` + `#rrggbbaa` 形式的 ink/paper alpha 变体。
-- [ ] **Step 2** `code-themes.ts` 实现：scope 覆盖 keyword/storage/type/string/comment/function/constant/entity 等；`bg` 置 `transparent`（页面底色由世界 token 决定）。
-- [ ] **Step 3** `vite.config.ts` 接入（reactRouter 条件加载逻辑不动）：
+- [x] **Step 1** 写失败测试（调色审计）：遍历两主题全部 `settings[].settings` 的 color/background/fontColor 等 hex，归一化小写后断言 ∈ 允许集——白名单以 tokens.css 实值为准：`#f3eee3` `#e7dfcc` `#17120c` `#c8281e` `#e03a24` + `#rrggbbaa` 形式的 ink/paper alpha 变体。
+- [x] **Step 2** `code-themes.ts` 实现：scope 覆盖 keyword/storage/type/string/comment/function/constant/entity 等；`bg` 置 `transparent`（页面底色由世界 token 决定）。
+- [x] **Step 3** `vite.config.ts` 接入（reactRouter 条件加载逻辑不动）：
 ```ts
 import mdx from "@mdx-js/rollup";
 import remarkFrontmatter from "remark-frontmatter";
@@ -85,8 +85,8 @@ import { createHighlighter } from "shiki";
 // highlighter 单例（buildStart 前惰性创建），themes:{light:paperTheme,dark:inkTheme}, defaultColor:"light"
 plugins: [ ...(process.env.VITEST ? [] : [reactRouter()]), mdx({...}), tailwindcss() ]
 ```
-- [ ] **Step 4** `src/types/mdx.d.ts` 环境声明；确认 `npx vitest run src/__tests__/code-themes.test.ts` 绿。
-- [ ] **Step 5** 门禁四连，提交 `feat(content): mdx pipeline with dual-theme shiki (P2/T2)`。
+- [x] **Step 4** `src/types/mdx.d.ts` 环境声明；确认 `npx vitest run src/__tests__/code-themes.test.ts` 绿。
+- [x] **Step 5** 门禁四连，提交 `feat(content): mdx pipeline with dual-theme shiki (P2/T2)`。
 
 ### Task 3: 种子文章 ×3
 
@@ -98,9 +98,9 @@ plugins: [ ...(process.env.VITEST ? [] : [reactRouter()]), mdx({...}), tailwindc
 **Interfaces:**
 - Produces: 三篇英文真实文章（各 ≥500 词），frontmatter 全字段合法（date 2026 年内、summary ≤160、tags ≥1）；black 轨侦探叙事包裹算法专题，red 轨工程手记——两轨文风按 spec §2。
 
-- [ ] **Step 1** 撰写三篇（正文真实有货：梯度消失一案给出链式法则证词与残差连接的破案陈述；快讯带文案押 nursery rhyme 韵）。
-- [ ] **Step 2** `node -e` 冒烟：`scanArticles` 全绿（借 T1 模块）。
-- [ ] **Step 3** 提交 `feat(content): three seed case files across both worlds (P2/T3)`。
+- [x] **Step 1** 撰写三篇（正文真实有货：梯度消失一案给出链式法则证词与残差连接的破案陈述；快讯带文案押 nursery rhyme 韵）。
+- [x] **Step 2** `node -e` 冒烟：`scanArticles` 全绿（借 T1 模块）。
+- [x] **Step 3** 提交 `feat(content): three seed case files across both worlds (P2/T3)`。
 
 ### Task 4: content 集合 + 最小文章路由 + prerender 自动化
 
@@ -116,10 +116,10 @@ plugins: [ ...(process.env.VITEST ? [] : [reactRouter()]), mdx({...}), tailwindc
   - `react-router.config.ts`：`prerender: async () => ["/", ...published.map(p => `/files/${p.slug}`)]`（`process.cwd()` 解析 content 目录）。
 - CSS 契约（附录冻结）：`defaultColor:"light"` 输出内联色 + `--shiki-dark` 变量；`[data-world="black"] .shiki, … span { color: var(--shiki-dark) }` 翻转；行号 `.shiki .line::before` CSS counter + font-machine。
 
-- [ ] **Step 1** 失败测试：content.test（三篇被收集、slug/frontmatter/readingTime 就位、date 降序）；filepage.test（render FilePage with seed slug → h1 文本、`pre.shiki` 存在、span 带 `--shiki-dark`、Redacted 存在；draft slug → SEALED FILE；meta() 断言 og:image 拼接）。
-- [ ] **Step 2** 实现 content.ts / FilePage / routes.ts 注册（`route("files/:slug", …)` 置于 `route("*")` 前）/ index.css 契约块 / react-router.config.ts。
-- [ ] **Step 3** 门禁四连 + prerender 冒烟：`npm run build` 后断言 `build/client/files/the-case-of-the-vanishing-gradient/index.html` 存在且含 `<h1`、meta description、`/og/…png` 引用；draft slug 无产物目录。
-- [ ] **Step 4** 提交 `feat(content): article collection, minimal file page, auto prerender (P2/T4)`。
+- [x] **Step 1** 失败测试：content.test（三篇被收集、slug/frontmatter/readingTime 就位、date 降序）；filepage.test（render FilePage with seed slug → h1 文本、`pre.shiki` 存在、span 带 `--shiki-dark`、Redacted 存在；draft slug → SEALED FILE；meta() 断言 og:image 拼接）。
+- [x] **Step 2** 实现 content.ts / FilePage / routes.ts 注册（`route("files/:slug", …)` 置于 `route("*")` 前）/ index.css 契约块 / react-router.config.ts。
+- [x] **Step 3** 门禁四连 + prerender 冒烟：`npm run build` 后断言 `build/client/files/the-case-of-the-vanishing-gradient/index.html` 存在且含 `<h1`、meta description、`/og/…png` 引用；draft slug 无产物目录。
+- [x] **Step 4** 提交 `feat(content): article collection, minimal file page, auto prerender (P2/T4)`。
 
 ### Task 5: OG 图 + RSS 构建期生成
 
@@ -134,21 +134,21 @@ plugins: [ ...(process.env.VITEST ? [] : [reactRouter()]), mdx({...}), tailwindc
   - 插件 closeBundle：写 `build/client/rss.xml`；satori 渲染 1200×630 SVG（paper 底 / ink 底按 world 翻转、Anton 大标题换行、kicker Courier 行、章节号 textStroke 描边水印、底部署名 "Orion Arch · The Magpie Files"）→ @resvg/resvg.js 转 PNG → `build/client/og/{slug}.png` + `build/client/og/index.png`（站卡）；字体从 `node_modules/@fontsource/{anton,courier-prime}/files/*-latin-400-normal.woff` 读取（satori 支持 woff；woff2 不支持）。
   - 幂等：`written` 标志防 client/server 双 pass 重复执行。
 
-- [ ] **Step 1** 失败测试：buildRssXml 三篇输入 → item 数、pubDate 格式、`&` 转义（summary 含 `&`）、draft 不进 feed。
-- [ ] **Step 2** 实现 rss.ts 与插件；`npm run build` 冒烟：`test -f build/client/rss.xml`、`og/*.png` 文件头为 PNG（`\x89PNG`）、`og/index.png` 存在。
-- [ ] **Step 3** 门禁四连，提交 `feat(content): og cards and rss feed at build time (P2/T5)`。
+- [x] **Step 1** 失败测试：buildRssXml 三篇输入 → item 数、pubDate 格式、`&` 转义（summary 含 `&`）、draft 不进 feed。
+- [x] **Step 2** 实现 rss.ts 与插件；`npm run build` 冒烟：`test -f build/client/rss.xml`、`og/*.png` 文件头为 PNG（`\x89PNG`）、`og/index.png` 存在。
+- [x] **Step 3** 门禁四连，提交 `feat(content): og cards and rss feed at build time (P2/T5)`。
 
 ### Task 6: 整备验收门 + PR
 
-- [ ] **Step 1 验收门（P2 DoD，失败即回对应任务）**
+- [x] **Step 1 验收门（P2 DoD，失败即回对应任务）**
 ```bash
 npm run build
 test -f build/client/rss.xml && test -f build/client/og/index.png && echo PIPELINE-OK
 grep -q "<h1" build/client/files/the-case-of-the-vanishing-gradient/index.html && echo PRERENDER-OK
 npm run typecheck && npm test && npm run lint
 ```
-- [ ] **Step 2** reduced-motion 审计不回归（现有 34 用例 + 新增全绿即可）。
-- [ ] **Step 3** 分支 `magpie-p2-content-pipeline` 推送并开 PR；合并后 `docs/plan` 记录勾选状态随 PR 入库。
+- [x] **Step 2** reduced-motion 审计不回归（现有 34 用例 + 新增全绿即可）。
+- [x] **Step 3** 分支 `magpie-p2-content-pipeline` 推送并开 PR；合并后 `docs/plan` 记录勾选状态随 PR 入库。
 
 ---
 
@@ -166,3 +166,14 @@ npm run typecheck && npm test && npm run lint
 | OG 产物 | `build/client/og/{slug}.png` 1200×630 + `og/index.png`；meta og:image = `{site.url}/og/{slug}.png` |
 | RSS 产物 | `build/client/rss.xml`，item link `{site.url}/files/{slug}` |
 | MDX 词表 | `<Redacted>` `<ClueChip>` `<HalftoneImage>` `<ExhibitCard>`（components prop 注入） |
+
+---
+
+## 附录 B：实施记录与偏差（P2 落地时回填）
+
+- **依赖版本**：实际落位 shiki v4 / @shikijs/rehype v4 / remark-mdx-frontmatter v5 / zod v4 / satori 0.33，均高于计划预估的 API 世代，`themes:{light,dark}` + `defaultColor:"light"` 契约不变。
+- **T3 冒烟**：`node -e` 原生加载 TS 需显式扩展名，与仓库 bundler 风格冲突；改为永久 vitest 守护测试（`seed-content.test.tsx`，同时覆盖 MDX 编译与 Shiki 产物断言）。
+- **T4 读取时长单源**：vitest 的 vite-node 不支持 glob `query:"?raw"`；改为 `scripts/magpie-content.ts` 虚拟模块插件，由 content-index 扫描器一次性产出 `slug → readingTimeMinutes`，构建/prerender/vitest 三环境同源。
+- **T4 SEO**：root 静态 `<title>`/description 与路由 meta 双写（React 19 只去重 title）；改为 root 仅保留默认 title，各叶子路由自带 title+description。
+- **T5 水印**：satori 0.33 经 resvg 渲染时 `textStroke` 与 `WebkitTextStroke` 均不生效，章节号描边水印改为强调红低透明度实心（视觉等效，代码内已注明）；页脚两段署名需包 div 才能被 flex 分离。
+- **T5 shiki v4**：输出以 `rgb()` 而非 hex 呈现主题色、`rgba(0,0,0,0.004)` 替代 `transparent` 背景，均无视觉影响；`.line` span 无内联样式，断言应落在 `pre` 上。

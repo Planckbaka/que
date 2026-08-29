@@ -121,6 +121,13 @@
 }
 
 /* Case-file article typography (P2 content pipeline; P3 adds Folio chrome). */
+/* Muted labels inside the folio card follow the card foreground (ink on red
+   world, paper on black), not the world foreground — otherwise red-world
+   cards render light-on-light. */
+.case-file .text-muted-foreground {
+  color: color-mix(in srgb, var(--color-card-foreground) 62%, transparent);
+}
+
 .case-file p {
   margin-block: 1.125rem;
   line-height: 1.75;
@@ -192,13 +199,14 @@
 
 /* Shiki dual themes (spec §4.2): compiled HTML carries the paper theme inline
    plus --shiki-dark variables. The black world flips via CSS variables only —
-   no re-highlight, no repaint flicker. */
+   no re-highlight, no repaint flicker. !important is required: token spans and
+   the pre carry their light-theme colors as inline styles. */
 [data-world="black"] .shiki span {
-  color: var(--shiki-dark);
+  color: var(--shiki-dark) !important;
 }
 
 [data-world="black"] .shiki {
-  color: var(--shiki-dark);
+  color: var(--shiki-dark) !important;
   background-color: var(--shiki-dark-bg) !important;
 }
 
