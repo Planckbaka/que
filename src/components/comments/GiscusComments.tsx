@@ -20,6 +20,7 @@ export function GiscusComments({ config = site.comments }: { config?: GiscusConf
   const { world } = useWorld();
   const hostRef = useRef<HTMLDivElement>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount once per config; world flips are re-voiced via the postMessage effect below
   useEffect(() => {
     const host = hostRef.current;
     if (!config || !host) return;
@@ -40,8 +41,6 @@ export function GiscusComments({ config = site.comments }: { config?: GiscusConf
     script.setAttribute("data-loading", "lazy");
     host.replaceChildren(script);
     return () => host.replaceChildren();
-    // Mount once per config; world flips are handled by the postMessage below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
   useEffect(() => {

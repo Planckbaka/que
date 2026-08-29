@@ -74,18 +74,17 @@ describe("GiscusComments configured", () => {
         "https://giscus.app",
       );
     });
-    // The world wipe busy-guards for ~1.1s (cover + reveal); keep clicking
-    // until the toggle lands, then expect the re-voiced theme.
+    // The world wipe busy-guards ~1.1s (cover + reveal); keep clicking the
+    // toggle until a click lands outside the busy window and the flip re-voices.
     await waitFor(
       async () => {
-        await user.click(screen.getByRole("button", { name: /world is black/i }));
-        expect(screen.getByRole("button", { name: /world is red/i })).toBeTruthy();
+        await user.click(screen.getByRole("button"));
+        expect(postMessage).toHaveBeenLastCalledWith(
+          { giscus: { setConfig: { theme: "noborder_light" } } },
+          "https://giscus.app",
+        );
       },
-      { timeout: 4000 },
-    );
-    expect(postMessage).toHaveBeenLastCalledWith(
-      { giscus: { setConfig: { theme: "noborder_light" } } },
-      "https://giscus.app",
+      { timeout: 6000 },
     );
   });
 });

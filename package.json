@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
-    "build": "tsc -b && react-router build",
+    "build": "tsc -b && react-router build && pagefind --site build/client",
     "preview": "vite preview --outDir build/client",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -45,6 +45,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "jsdom": "^26.1.0",
+    "pagefind": "^1.5.2",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
     "satori": "^0.33.4",

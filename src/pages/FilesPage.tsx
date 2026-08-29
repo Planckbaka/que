@@ -1,6 +1,7 @@
 import { ClueChip } from "@/components/magpie/ClueChip";
 import { LinkUnderVeil } from "@/components/motion/Veil";
 import { useWorld, type World } from "@/components/motion/WorldWipe";
+import { ArchiveSearch } from "@/components/search/ArchiveSearch";
 import type { Article } from "@/lib/content";
 import { groupByWorld, publishedArticles } from "@/lib/content";
 import { site } from "@/lib/site";
@@ -73,6 +74,9 @@ export default function FilesPage() {
           Two tracks, one investigation. Your current world leads the shelf; flip the switch to
           re-weight the files.
         </p>
+        <div className="mt-8">
+          <ArchiveSearch />
+        </div>
       </section>
 
       {ordered.map((track) => (

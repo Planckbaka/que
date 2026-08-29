@@ -61,7 +61,10 @@ export default function FilePage() {
       />
       <ReadingFolio total={article.readingTimeMinutes} />
       <article className="mx-auto max-w-[76rem] px-6 py-16 md:px-10">
-        <div className="on-card case-file mx-auto max-w-[72ch] border-2 border-line bg-card p-8 text-card-foreground shadow-print-lg md:p-14">
+        <div
+          data-pagefind-body
+          className="on-card case-file mx-auto max-w-[72ch] border-2 border-line bg-card p-8 text-card-foreground shadow-print-lg md:p-14"
+        >
           <p className="font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
             {fm.kicker}
           </p>
