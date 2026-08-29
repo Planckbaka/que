@@ -12,6 +12,7 @@ export default {
     const articles = await scanArticles(resolve(process.cwd(), "content/files"));
     return [
       "/",
+      "/files",
       ...articles
         .filter((article) => !article.frontmatter.draft)
         .map((article) => `/files/${article.slug}`),

@@ -47,3 +47,10 @@ export const publishedArticles: Article[] = articles.filter(
 export function getArticle(slug: string): Article | undefined {
   return articles.find((article) => article.slug === slug);
 }
+
+export function groupByWorld(shelf: Article[]): Record<"red" | "black", Article[]> {
+  return {
+    red: shelf.filter((article) => article.frontmatter.world === "red"),
+    black: shelf.filter((article) => article.frontmatter.world === "black"),
+  };
+}

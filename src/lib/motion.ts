@@ -20,11 +20,16 @@ export function stagger(index: number, step: number = STAGGER_STEP): number {
 }
 
 /**
- * 系统级 reduced-motion 统一读取入口，供 SmoothScroll / Veil / WorldWipe 三处复用。
- * 必须在「调用时」读取（而非模块加载时缓存），否则测试里的 matchMedia 存根不生效。
+ * 系统级 reduced-motion 统一读取入口，供 SmoothScroll / Veil / WorldWipe /
+ * ChapterNumeral 复用。必须在「调用时」读取（而非模块加载时缓存），否则测试里的
+ * matchMedia 存根不生效；同时守卫 Node/prerender 环境（无 window → 视为未命中）。
  */
 export function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
 /**
