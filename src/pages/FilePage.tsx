@@ -1,6 +1,9 @@
 import { useParams } from "react-router";
 import { articleComponents } from "@/components/mdx/article-components";
-import { getArticle } from "@/lib/content";
+import { ChapterNumeral } from "@/components/motion/ChapterNumeral";
+import { ReadingFolio } from "@/components/motion/ReadingFolio";
+import { getArticle, publishedArticles } from "@/lib/content";
+import { romanNumeral } from "@/lib/motion";
 import { site } from "@/lib/site";
 
 // Minimal case-file reader (P2 pipeline proof). P3 replaces this with the full
@@ -46,10 +49,18 @@ export default function FilePage() {
     return <SealedNotice slug={slug} />;
   }
   const { frontmatter: fm, Component } = article;
+  // Chapter numeral = position in the published shelf (monument budget: this
+  // numeral is the one monumental element on the reading view).
+  const ordinal = publishedArticles.findIndex((entry) => entry.slug === article.slug);
   return (
-    <main data-world={fm.world} className="min-h-svh bg-background text-foreground">
+    <main data-world={fm.world} className="relative min-h-svh bg-background text-foreground">
+      <ChapterNumeral
+        numeral={romanNumeral(ordinal + 1)}
+        className="-top-8 right-0 text-[clamp(10rem,26vw,22rem)]"
+      />
+      <ReadingFolio total={article.readingTimeMinutes} />
       <article className="mx-auto max-w-[76rem] px-6 py-16 md:px-10">
-        <div className="case-file mx-auto max-w-[72ch] border-2 border-line bg-card p-8 text-card-foreground shadow-print-lg md:p-14">
+        <div className="on-card case-file mx-auto max-w-[72ch] border-2 border-line bg-card p-8 text-card-foreground shadow-print-lg md:p-14">
           <p className="font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
             {fm.kicker}
           </p>

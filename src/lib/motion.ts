@@ -20,11 +20,16 @@ export function stagger(index: number, step: number = STAGGER_STEP): number {
 }
 
 /**
- * 系统级 reduced-motion 统一读取入口，供 SmoothScroll / Veil / WorldWipe 三处复用。
- * 必须在「调用时」读取（而非模块加载时缓存），否则测试里的 matchMedia 存根不生效。
+ * 系统级 reduced-motion 统一读取入口，供 SmoothScroll / Veil / WorldWipe /
+ * ChapterNumeral 复用。必须在「调用时」读取（而非模块加载时缓存），否则测试里的
+ * matchMedia 存根不生效；同时守卫 Node/prerender 环境（无 window → 视为未命中）。
  */
 export function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
 /**
@@ -45,4 +50,46 @@ export function railShift(progress: number, contentW: number, viewW: number): nu
  */
 export function clampPct(v: number): number {
   return Math.min(95, Math.max(5, v));
+}
+
+/**
+ * 阅读 folio（P3/T2 ReadingFolio）页码纯函数：把全局滚动进度 [0,1] 映射到
+ * 印刷页码 [1, total]（书的页数口径 = 阅读时长分钟数）。total 非正时退回第 1 页。
+ */
+export function folioPage(progress: number, total: number): number {
+  if (total < 1) return 1;
+  const clamped = Math.min(1, Math.max(0, progress));
+  return Math.min(total, Math.max(1, Math.floor(clamped * total) + 1));
+}
+
+/**
+ * 章节罗马数字（P3/T2 ChapterNumeral）纯函数：标准减写规则；
+ * 非正输入回退 "I"（内容永远有一章）。
+ */
+export function romanNumeral(n: number): string {
+  if (n < 1) return "I";
+  const table: Array<[number, string]> = [
+    [1000, "M"],
+    [900, "CM"],
+    [500, "D"],
+    [400, "CD"],
+    [100, "C"],
+    [90, "XC"],
+    [50, "L"],
+    [40, "XL"],
+    [10, "X"],
+    [9, "IX"],
+    [5, "V"],
+    [4, "IV"],
+    [1, "I"],
+  ];
+  let rest = Math.floor(n);
+  let out = "";
+  for (const [value, glyph] of table) {
+    while (rest >= value) {
+      out += glyph;
+      rest -= value;
+    }
+  }
+  return out;
 }

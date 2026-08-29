@@ -1,5 +1,4 @@
 import { motion } from "motion/react";
-import { BookSpine } from "@/components/magpie/BookSpine";
 import { ChapterHeading } from "@/components/magpie/ChapterHeading";
 import { ClueChip } from "@/components/magpie/ClueChip";
 import { HalftoneImage } from "@/components/magpie/HalftoneImage";
@@ -22,6 +21,7 @@ import { PageFlutter } from "@/components/motion/PageFlutter";
 import { PressTape } from "@/components/motion/PressTape";
 import { StaggerList } from "@/components/motion/StaggerList";
 import { TypewriterText } from "@/components/motion/TypewriterText";
+import { LinkUnderVeil } from "@/components/motion/Veil";
 import { useWorld } from "@/components/motion/WorldWipe";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { publishedArticles } from "@/lib/content";
 import { site } from "@/lib/site";
 
 export function meta() {
@@ -43,15 +44,6 @@ export function meta() {
     { title: `${site.title} · 喜鹊档案` },
     { name: "description", content: site.description },
   ];
-}
-
-function RunningHead() {
-  return (
-    <header className="flex items-baseline justify-between border-b border-foreground/30 px-6 py-3 font-machine text-[11px] font-bold uppercase tracking-[0.28em] text-muted-foreground md:px-10">
-      <span>The Magpie Files · 喜鹊档案</span>
-      <span className="hidden sm:inline">Case No. 1954-PYE</span>
-    </header>
-  );
 }
 
 function Hero() {
@@ -377,43 +369,40 @@ function CounterSection() {
   );
 }
 
-function Footer() {
+function ArchiveEntry() {
   return (
-    <footer data-world="red" className="border-t-2 border-ink bg-background text-foreground">
-      <div className="mx-auto grid max-w-[76rem] gap-12 px-6 py-16 sm:grid-cols-[auto_1fr_auto] md:px-10">
-        <div className="flex gap-4">
-          <BookSpine label="Anton" className="h-44" />
-          <BookSpine label="Crimson Pro" className="h-52" />
-          <BookSpine label="Courier Prime" className="h-40" />
+    <section data-world="red" className="border-t-2 border-ink bg-background px-6 py-16 md:px-10">
+      <div className="mx-auto max-w-[76rem]">
+        <p className="font-machine text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
+          From the Archive · 最新档案
+        </p>
+        <h2 className="mt-3 font-display text-4xl uppercase md:text-5xl">Recently Filed</h2>
+        <div className="mt-10 grid gap-8 md:grid-cols-3">
+          {publishedArticles.slice(0, 3).map((entry) => (
+            <LinkUnderVeil
+              key={entry.slug}
+              to={`/files/${entry.slug}`}
+              className="on-card block border-2 border-line bg-card p-6 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-1"
+            >
+              <p className="font-machine text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+                {entry.frontmatter.kicker}
+              </p>
+              <h3 className="mt-2 font-display text-2xl uppercase leading-none">
+                {entry.frontmatter.title}
+              </h3>
+              <p className="mt-4 font-machine text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Filed {entry.frontmatter.date} · {entry.readingTimeMinutes} min read
+              </p>
+            </LinkUnderVeil>
+          ))}
         </div>
-        <div className="space-y-2 self-center font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-          <p>The Magpie Files — a design system study</p>
-          <p>After the main titles by HUGE Designs (2022)</p>
-          <p>Set in Anton · Crimson Pro · Courier Prime</p>
-        </div>
-        <nav className="flex flex-col items-start gap-3 sm:items-end" aria-label="Colophon links">
+        <div className="mt-10">
           <Button variant="type" size="sm" asChild>
-            <a href="#top">Back to cover</a>
+            <LinkUnderVeil to="/files">Open the archive</LinkUnderVeil>
           </Button>
-          <Button variant="type" size="sm" asChild>
-            <a href="#evidence">Evidence</a>
-          </Button>
-        </nav>
-      </div>
-      <div className="border-t border-border">
-        <div className="mx-auto flex max-w-[76rem] items-center justify-between px-6 py-3 font-machine text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground md:px-10">
-          <span>Folio ∞</span>
-          <motion.span
-            animate={{ y: [0, -4, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="inline-block"
-          >
-            <Magpie className="size-5" />
-          </motion.span>
-          <span>Printed nowhere</span>
         </div>
       </div>
-    </footer>
+    </section>
   );
 }
 
@@ -421,7 +410,6 @@ export default function ShowcasePage() {
   return (
     <div id="top" className="min-h-svh">
       <PaperGrain />
-      <RunningHead />
       <main>
         <Hero />
         <WorldDivider />
@@ -431,8 +419,8 @@ export default function ShowcasePage() {
         <EvidenceLocker />
         <CaseNotes />
         <CounterSection />
+        <ArchiveEntry />
       </main>
-      <Footer />
     </div>
   );
 }
