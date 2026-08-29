@@ -64,25 +64,27 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <dl className="on-card h-fit border-2 border-line bg-card p-8 text-card-foreground shadow-print">
-            {EDITION.map(([term, detail]) => (
-              <div
-                key={term}
-                className="flex flex-col gap-1 border-b border-line/40 py-4 first:pt-0 last:border-b-0 last:pb-0"
-              >
-                <dt className="font-machine text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
-                  {term}
-                </dt>
-                <dd className="font-body text-base">{detail}</dd>
-              </div>
-            ))}
+          <div className="on-card h-fit border-2 border-line bg-card p-8 text-card-foreground shadow-print">
+            <dl>
+              {EDITION.map(([term, detail]) => (
+                <div
+                  key={term}
+                  className="flex flex-col gap-1 border-b border-line/40 py-4 first:pt-0 last:border-b-0 last:pb-0"
+                >
+                  <dt className="font-machine text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
+                    {term}
+                  </dt>
+                  <dd className="font-body text-base">{detail}</dd>
+                </div>
+              ))}
+            </dl>
             <div className="flex items-center justify-between pt-6">
               <span className="font-machine text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
                 First edition · August 2026
               </span>
               <Magpie className="size-6" />
             </div>
-          </dl>
+          </div>
         </div>
       </section>
     </div>

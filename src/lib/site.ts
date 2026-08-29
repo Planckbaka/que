@@ -5,4 +5,8 @@ export const site = {
   title: "The Magpie Files",
   author: "Orion Arch",
   description: "The Magpie Files — engineering notes and algorithm case files by Orion Arch.",
+  // giscus credentials (repo/repoId/category/categoryId) land at launch; until
+  // then article pages show the "later printing" notice. Shape:
+  // comments: { repo: "Planckbaka/que", repoId: "...", category: "Marginalia", categoryId: "..." },
+  comments: undefined,
 } as const;
