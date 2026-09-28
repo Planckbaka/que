@@ -10,6 +10,7 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { defineConfig } from "vitest/config";
 import { magpieCaseFiles } from "./scripts/magpie-content";
 import { magpiePipeline } from "./scripts/magpie-pipeline";
+import remarkHeadings from "./scripts/remark-headings";
 import { inkTheme, paperTheme } from "./src/lib/code-themes";
 
 export default defineConfig({
@@ -19,7 +20,7 @@ export default defineConfig({
   // RRv7 requires @mdx-js/rollup to precede the react-router plugin.
   plugins: [
     mdx({
-      remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
+      remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkHeadings],
       rehypePlugins: [
         [
           rehypeShiki,

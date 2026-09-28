@@ -7,7 +7,7 @@ import {
   type FileFrontmatter,
   FileFrontmatterSchema,
   slugFromFile,
-} from "./frontmatter";
+} from "./frontmatter.ts";
 
 // Node-only helper. reading-time lives HERE, not in client-shared
 // frontmatter.ts: its CJS entry requires node:stream/util, which crashes the

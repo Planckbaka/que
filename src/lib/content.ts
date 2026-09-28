@@ -1,12 +1,7 @@
 import type { MDXComponents } from "*.mdx";
-import { caseFileReadingTime } from "virtual:magpie-case-files";
-import type { ComponentType } from "react";
-import {
-  compareNewestFirst,
-  type FileFrontmatter,
-  FileFrontmatterSchema,
-  slugFromFile,
-} from "./frontmatter";
+import { articleLoaders, publicArticles, publicComponents } from "virtual:magpie-case-files";
+import { type ComponentType, createElement } from "react";
+import type { FileFrontmatter } from "./frontmatter";
 
 export type Article = {
   slug: string;
@@ -15,37 +10,28 @@ export type Article = {
   readingTimeMinutes: number;
 };
 
-// Client-side content collection. Runs inside the Vite pipeline (prerender
-// render pass AND the browser bundle), so schema violations fail the build
-// here as well as in the Node-side scanner (src/lib/content-index.ts), which
-// also feeds this module its reading times through the virtual module below.
-const compiled = import.meta.glob<{
-  default: ComponentType<{ components?: MDXComponents }>;
-  frontmatter: Record<string, unknown>;
-}>("../../content/files/*.mdx", { eager: true });
-
-const collected: Article[] = Object.entries(compiled).map(([path, mod]) => {
-  const slug = slugFromFile(path.split("/").pop() ?? "");
-  const readingTimeMinutes = caseFileReadingTime[slug];
-  if (readingTimeMinutes === undefined) {
-    throw new Error(`no reading time found for case file: ${slug}`);
-  }
+// The build-side scanner validates and excludes drafts before creating imports.
+// Client route loading requests only the selected body; prerender uses server-only imports.
+const loaded = new Map<string, Article["Component"]>(Object.entries(publicComponents));
+export async function preloadArticle(slug: string) {
+  if (!Object.hasOwn(articleLoaders, slug)) return;
+  const load = articleLoaders[slug];
+  if (load && !loaded.has(slug)) loaded.set(slug, (await load()).default);
+}
+export const publishedArticles: Article[] = publicArticles.map((article) => {
   return {
-    slug,
-    frontmatter: FileFrontmatterSchema.parse(mod.frontmatter),
-    Component: mod.default,
-    readingTimeMinutes,
+    ...article,
+    Component: (props) => {
+      const Body = loaded.get(article.slug);
+      if (!Body) throw new Error(`Article body was not loaded: ${article.slug}`);
+      return createElement(Body, props);
+    },
   };
 });
-
-export const articles: Article[] = collected.sort(compareNewestFirst);
-
-export const publishedArticles: Article[] = articles.filter(
-  (article) => !article.frontmatter.draft,
-);
+export const articles = publishedArticles;
 
 export function getArticle(slug: string): Article | undefined {
-  return articles.find((article) => article.slug === slug);
+  return publishedArticles.find((article) => article.slug === slug);
 }
 
 export function groupByWorld(shelf: Article[]): Record<"red" | "black", Article[]> {

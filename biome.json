@@ -41,6 +41,7 @@
       "!build",
       "!.react-router",
       "!.omc",
+      "!.claude/settings.local.json",
       "!storybook-static"
     ]
   }

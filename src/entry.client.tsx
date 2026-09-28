@@ -5,15 +5,23 @@ import { startTransition } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { HydratedRouter } from "react-router/dom";
 
-startTransition(() => {
-  hydrateRoot(document, <HydratedRouter />, {
-    onRecoverableError: (error, errorInfo) => {
-      console.error(
-        "[hydration]",
-        error instanceof Error ? error.message : error,
-        "\n",
-        errorInfo.componentStack,
-      );
-    },
+async function hydrate() {
+  const match = /^\/files\/([^/]+)\/?$/.exec(window.location.pathname);
+  if (match) {
+    const { preloadArticle } = await import("./lib/content");
+    await preloadArticle(decodeURIComponent(match[1]));
+  }
+  startTransition(() => {
+    hydrateRoot(document, <HydratedRouter />, {
+      onRecoverableError: (error, errorInfo) => {
+        console.error(
+          "[hydration]",
+          error instanceof Error ? error.message : error,
+          "\n",
+          errorInfo.componentStack,
+        );
+      },
+    });
   });
-});
+}
+void hydrate().catch((error: unknown) => console.error("Unable to hydrate article", error));

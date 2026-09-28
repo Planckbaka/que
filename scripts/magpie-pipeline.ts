@@ -190,10 +190,10 @@ export function magpiePipeline(): Plugin {
           {
             file: "og/index.png",
             card: ogCard({
-              kicker: "Case Index · 1954-PYE",
+              kicker: "Python · Go · AI infrastructure",
               title: site.title,
               world: "red",
-              numeral: "1954",
+              numeral: "OA",
             }),
           },
           ...articles.map((article, index) => ({

@@ -28,6 +28,7 @@
     "react-router.config.ts",
     "app/**/*.tsx",
     "app/**/*.ts",
-    "scripts/**/*.ts"
+    "scripts/**/*.ts",
+    "src/types/**/*.d.ts"
   ]
 }

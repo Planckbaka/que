@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
-    "build": "tsc -b && react-router build && pagefind --site build/client",
+    "build": "tsc -b && react-router build && pagefind --site build/client && node scripts/check-publication.ts",
     "preview": "node scripts/preview.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",

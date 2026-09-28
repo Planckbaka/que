@@ -2,9 +2,11 @@
 // task pins the production domain; canonical/OG/RSS all derive from it.
 export const site = {
   url: "https://themagpiefiles.pages.dev",
-  title: "The Magpie Files",
+  title: "Orion Arch · Engineering Notes",
   author: "Orion Arch",
-  description: "The Magpie Files — engineering notes and algorithm case files by Orion Arch.",
+  github: "https://github.com/orionarch26",
+  description:
+    "Orion Arch’s personal blog — a Python and Go backend engineering blog by Orion Arch, covering APIs, concurrency, and AI infrastructure.",
   // giscus credentials (repo/repoId/category/categoryId) land at launch; until
   // then article pages show the "later printing" notice. Shape:
   // comments: { repo: "Planckbaka/que", repoId: "...", category: "Marginalia", categoryId: "..." },
@@ -17,9 +19,16 @@ export function socialMeta(input: {
   title: string;
   description: string;
   image?: string;
+  path?: string;
 }): Array<Record<string, string>> {
   const image = input.image ?? `${site.url}/og/index.png`;
   return [
+    ...(input.path
+      ? [
+          { tagName: "link", rel: "canonical", href: `${site.url}${input.path}` },
+          { property: "og:url", content: `${site.url}${input.path}` },
+        ]
+      : []),
     { property: "og:title", content: input.title },
     { property: "og:description", content: input.description },
     { property: "og:image", content: image },
