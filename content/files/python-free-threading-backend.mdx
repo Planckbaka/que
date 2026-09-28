@@ -1,0 +1,76 @@
+---
+title: Free-Threaded Python Meets the Backend
+kicker: Engineering Notes · Python Runtime
+world: red
+tags: [python, free-threading, concurrency]
+summary: "What Python 3.14 free threading changes for backend services, and how to evaluate dependencies, shared state, and performance."
+date: 2026-09-04
+---
+
+Removing a global lock sounds like a universal performance upgrade. For a backend engineer, the more useful question is narrower: which part of this service could execute in parallel, and who owns the state it changes?
+
+This article uses Python 3.14 as its version baseline. Free-threaded Python has supported status in that release, but remains an optional build rather than the default interpreter configuration. Supported does not mean that every extension or deployment image is compatible. [PEP 779](https://peps.python.org/pep-0779/) defines that rollout stage.
+
+## Check the interpreter you are actually running
+
+A free-threading-capable build and a process currently running without the GIL are different observations. An extension that does not declare support can cause the GIL to be enabled. The following diagnostic should run after importing the dependencies that the service really uses.
+
+```python
+import sys
+import sysconfig
+
+# Import the service's actual extension dependencies before this check.
+print("version:", sys.version.split()[0])
+print("free-threading build:", bool(sysconfig.get_config_var("Py_GIL_DISABLED")))
+print("GIL currently enabled:", sys._is_gil_enabled())
+```
+
+The underscore API here is an intentional interpreter diagnostic for this version-specific example, not a portable abstraction across Python implementations. The [Python free-threading guide](https://docs.python.org/3.14/howto/free-threading-python.html) documents runtime detection, extension compatibility, and synchronization considerations.
+
+## Shared containers are not transactions
+
+Internal protections for a dictionary do not turn “read, modify, write” into an application-level transaction. A service's invariants often span several operations or multiple objects. Give mutable state one owner, or protect the whole invariant with a lock.
+
+Here is a deliberately small, executable example. It is a correctness demonstration, not a performance benchmark: the lock serializes the counter updates.
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
+
+
+def count_jobs(workers: int = 4, per_worker: int = 1_000) -> int:
+    lock = Lock()
+    completed = 0
+
+    def work() -> None:
+        nonlocal completed
+        for _ in range(per_worker):
+            with lock:
+                completed += 1
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(lambda _: work(), range(workers)))
+    return completed
+
+
+assert count_jobs() == 4_000
+print("completed:", count_jobs())
+```
+
+In a real service, prefer computing an independent result in each worker and combining results at a clear boundary. A lock around an entire request handler might preserve correctness while removing most of the intended parallelism.
+
+## Choose an execution model for the bottleneck
+
+For waiting on remote services, asynchronous I/O remains useful. For substantial CPU work written in Python, free-threaded workers are worth evaluating. For native numerical kernels, first measure the library's existing parallel execution: adding Python workers can oversubscribe a machine that is already busy.
+
+Those are experiment hypotheses, not guaranteed outcomes. Start with a profile of a representative workload. Keep the payload distribution, connection pool sizes, worker counts, and CPU limit fixed when comparing builds. Record memory use and tail latency as well as throughput. A benchmark that replaces production extensions with a pure-Python loop answers a different question.
+
+## A migration gate I would use
+
+1. Build a dependency inventory, including transitive binary extensions and their wheels.
+2. Check the effective GIL state after startup imports in the deployment image.
+3. Exercise concurrent updates, shutdown, cancellation, and connection reuse.
+4. Run the same load against conventional and free-threaded builds.
+5. Keep the simpler deployment unless the measured gain justifies the extra compatibility work.
+
+The architectural opportunity is explicit parallel execution. The engineering responsibility is explicit ownership. Switching interpreters cannot supply the missing ownership model for a shared cache, database session, or mutable request registry.

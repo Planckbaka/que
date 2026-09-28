@@ -1,0 +1,95 @@
+---
+title: Bounded Concurrency for AI Backends
+kicker: Frontier Notes · Python and AI Systems
+world: black
+tags: [python, asyncio, ai-infrastructure]
+summary: "A runnable asyncio worker pool for AI request pipelines, with bounded queues, structured cancellation, and explicit failure policy."
+date: 2026-09-03
+---
+
+An AI feature often starts as one remote call. It grows into retrieval, reranking, model inference, validation, and persistence. When those steps fan out, the service becomes a queueing system whether its code acknowledges that fact or not.
+
+The first control I would add is a limit on admitted work. Launching one task per document and placing a semaphore inside each task limits active calls, but still allocates all the waiting tasks. For a large input stream, a bounded queue and a fixed worker population make the backlog visible.
+
+## A small, runnable pipeline
+
+This example requires Python 3.11 or later. It uses a simulated remote operation, no SDK, credentials, or external network. The integer inputs keep attention on lifecycle and capacity; a real producer might read document identifiers from a cursor.
+
+```python
+import asyncio
+from collections.abc import Awaitable, Callable, Iterable
+
+
+async def pipeline(
+    items: Iterable[int],
+    call: Callable[[int], Awaitable[int]],
+    *,
+    workers: int = 4,
+    capacity: int = 8,
+    timeout: float = 0.5,
+) -> list[int]:
+    if workers < 1 or capacity < 1 or timeout <= 0:
+        raise ValueError("workers, capacity, and timeout must be positive")
+
+    queue: asyncio.Queue[tuple[int, int] | None] = asyncio.Queue(capacity)
+    results: dict[int, int] = {}
+
+    async def produce() -> None:
+        for index, item in enumerate(items):
+            await queue.put((index, item))
+        for _ in range(workers):
+            await queue.put(None)
+
+    async def consume() -> None:
+        while True:
+            entry = await queue.get()
+            try:
+                if entry is None:
+                    return
+                index, item = entry
+                async with asyncio.timeout(timeout):
+                    results[index] = await call(item)
+            finally:
+                queue.task_done()
+
+    async with asyncio.TaskGroup() as group:
+        group.create_task(produce())
+        for _ in range(workers):
+            group.create_task(consume())
+
+    return [results[index] for index in sorted(results)]
+
+
+async def main() -> None:
+    async def simulate_inference(item: int) -> int:
+        await asyncio.sleep(0.01)
+        return item * 2
+
+    output = await pipeline(range(12), simulate_inference)
+    assert output == [item * 2 for item in range(12)]
+    print(output)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## What the limits actually bound
+
+A queue with a positive maximum size makes `put()` wait when full. The queue API itself has no timeout argument; use an asyncio timeout around a wait when a bounded admission delay is required. Queue size counts entries rather than payload bytes. These semantics are documented in [asyncio queues](https://docs.python.org/3.14/library/asyncio-queue.html).
+
+The example bounds queued entries and active calls, not total memory. It retains all results, and the caller might already hold a large input list. For an unbounded stream, send completed results to a bounded downstream stage or durable sink. If outputs must remain ordered, account for the reorder buffer when a slow item blocks earlier delivery.
+
+## Failure is part of the interface
+
+The chosen policy is all-or-fail: an ordinary worker exception causes `TaskGroup` to cancel sibling tasks and wait for cleanup. Failures are reported through an exception group. The per-call timeout uses cancellation, so a client that blocks the event loop or suppresses cancellation can defeat the intended timing. See [TaskGroup and timeout semantics](https://docs.python.org/3.14/library/asyncio-task.html).
+
+The timer starts when a worker takes an item. Queue waiting is excluded. For a user-visible end-to-end deadline, carry an absolute deadline from admission and pass only the remaining budget to each stage. Do not restart the full budget at every hop.
+
+Cancelling local work is also not proof that a remote inference stopped or avoided billing. Establish that behavior from the provider's contract. Likewise, retries of writes require an idempotency design; a timeout is not evidence that the first attempt did nothing.
+
+## Controls to add at the service boundary
+
+Use separate budgets for retrieval and inference when their capacities differ. Bound payload size as well as queue length. Measure queue delay separately from execution time. Define what happens when admission expires: reject, defer durably, or return partial results according to the endpoint contract.
+
+Concurrency and requests per second are different controls. Four workers can exceed a rate limit when requests are fast, or underutilize a backend when requests are slow. Tune capacity from observed service times and quotas, then test overload explicitly. A professional AI backend should have a predictable failure mode before it needs a larger model.

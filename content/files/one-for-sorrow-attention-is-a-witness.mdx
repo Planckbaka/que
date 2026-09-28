@@ -3,18 +3,18 @@ title: One for Sorrow, Attention Is a Witness
 kicker: Algorithm Files · Case No. 018
 world: black
 tags: [transformers, attention]
-summary: Nine witnesses, one verdict. How scaled dot-product attention cross-examines every token at once — and why the softmax keeps nobody silent.
+summary: "A worked example of scaled dot-product attention: queries, keys, values, and why scores are scaled before softmax."
 date: 2026-08-02
 ---
 
-In the old counting rhyme, seeing a single magpie is an omen of sorrow. In a transformer, every token sees every other magpie on the wire simultaneously — and must decide whose testimony matters. Attention is not a mechanism. It is a **lineup**, conducted once per layer, per head, per token.
+In the old counting rhyme, seeing a single magpie is an omen of sorrow. In this unmasked example, a query compares itself with every key. Causal attention restricts that visibility to allowed earlier positions. The witness metaphor illustrates weighting; it is not a claim about factual reliability.
 
 ## The Lineup Procedure
 
-A query walks into the room. Nine keys stand against the wall. The procedure is always the same three steps:
+A query walks into the room. Three keys stand against the wall. The procedure is always the same three steps:
 
-1. **Resemblance.** Score each key against the query with a dot product — cheap, linear, and symmetric in the only way that matters: similar things in similar spaces score high.
-2. **The scale correction.** Divide by the square root of the key dimension. Without it, high-dimensional dot products grow in variance with the dimension, and the softmax that follows would sharpen into a hard argmax. One witness would be believed completely; the rest dismissed before speaking. The scale keeps the jury *deliberating*.
+1. **Resemblance.** Score each key against the query with a dot product — a measure of compatibility in the projected space. Learned query and key projections need not be the same.
+2. **The scale correction.** Divide by the square root of the key dimension. Without it, high-dimensional dot products grow in variance with the dimension, and the softmax that follows can become overly concentrated. One witness would be believed completely; the rest dismissed before speaking. The scale keeps the jury *deliberating*.
 3. **Cross-examination.** Softmax the scores into a distribution that sums to one, then blend the value vectors under it.
 
 <ClueChip>softmax temperature</ClueChip>
@@ -28,7 +28,7 @@ import numpy as np
 
 def scaled_dot_attention(
     q: np.ndarray, k: np.ndarray, v: np.ndarray
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     scores = (q @ k.T) / np.sqrt(k.shape[-1])   # resemblance, scaled
     weights = np.exp(scores - scores.max(-1, keepdims=True))
     weights = weights / weights.sum(-1, keepdims=True)  # cross-examination
@@ -38,11 +38,11 @@ q = np.array([[1.0, 0.0]])
 k = np.array([[1.0, 0.0], [0.0, 1.0], [0.9, 0.1]])
 v = np.array([[10.0], [20.0], [30.0]])
 blend, witness = scaled_dot_attention(q, k, v)
-print(witness.round(3))   # [[0.484 0.064 0.452]]
-print(blend.round(2))     # [[17.72]]
+print(witness.round(3))   # [[0.412 0.203 0.384]]
+print(blend.round(2))     # [[19.72]]
 ```
 
-Note who the lineup believed. The third witness is nearly indistinguishable from the first, and so the verdict — 17.72 — is not "the value of the best match" but a *negotiated average* between the two credible testimonies. Attention never convicts one suspect. It distributes belief.
+The weights are approximately 0.412, 0.203, and 0.384. The result, 19.72, includes all three values; it is not the value of the best-matching key. The first and third keys receive similar weights because their scaled scores are close.
 
 <ExhibitCard exhibit="EXHIBIT 018-C" caption="Chain of testimony">
   The magpie rhyme, annotated as a witness ledger:
@@ -55,10 +55,10 @@ Note who the lineup believed. The third witness is nearly indistinguishable from
 
 ## Why Nobody Stays Silent
 
-The softmax has a property our investigation learned to love: it is *differentiable with respect to every score*. Even the witness who receives almost no weight still receives *some*, and its gradient — though small — is nonzero. Contrast this with the hard maximum, whose gradient is a wall of zeros everywhere except the argmax. A hard lineup lets exactly one witness train per step. A softmax lineup lets all nine testify, proportionally to how close they came.
+For finite unmasked scores in exact arithmetic, softmax assigns positive weights. That does not guarantee a useful gradient for every score: saturation, upstream derivatives, masking, and finite-precision underflow matter. A sharply peaked distribution can make learning difficult.
 
-There is a second, quieter consequence. Because attention is a weighted average of value vectors, the output always lives in the convex hull of the values it reads. Positional information aside, attention cannot invent testimony that was never on the wire — it can only recombine. When a model *hallucinates*, the invention happened elsewhere: in the feed-forward blocks, the dense inventors of the family. The lineup merely decides whom to believe.
+Without dropout, the weighted sum lies in the convex hull of the value vectors. This observation applies to this head's aggregation, not the full network after projections and residual connections. It does not show that hallucinations originate only in feed-forward blocks. Attention weights are not factual confidence scores.
 
 ## The Verdict We Keep
 
-Scale by the root, soften with the softmax, blend with the weights. Every transformer in production is running this same lineup a trillion times a day, and the rhyme still holds: one for sorrow when attention is uniform, joy when it is sharp. The detective's advice is unchanged — trust the negotiated average, and never let a single witness be believed completely.
+Scale the scores, normalize over keys, and blend the values. The numerical result is a weighted average, not a verdict about truth. Continue with [Attention, From Tensor Shapes to KV Cache](/files/llm-attention-from-shapes-to-kv-cache) for causal masking and inference memory.
