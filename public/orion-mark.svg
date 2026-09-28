@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Orion Arch monogram</title>
+  <rect width="64" height="64" rx="2" fill="#17120c"/>
+  <path fill="#f3eee3" fill-rule="evenodd" d="M9 14h21v36H9zm7 7v22h7V21zM35 50l8-36h8l8 36h-7l-2-9h-6l-2 9zm10-16h4l-2-11z"/>
+  <path fill="#c8281e" d="M0 57h64v7H0z"/>
+</svg>
