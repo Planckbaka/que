@@ -7,6 +7,7 @@ import { getArticle, preloadArticle, publishedArticles } from "@/lib/content";
 import { romanNumeral } from "@/lib/motion";
 import { site, socialMeta } from "@/lib/site";
 import NotFoundPage, { meta as notFoundMeta } from "./NotFoundRedirect";
+import { RouteErrorCard } from "./SeoLayout";
 
 // Resolve the body before rendering so prerendered HTML contains visible text,
 // rather than a streamed Suspense placeholder that a static indexer ignores.
@@ -40,6 +41,17 @@ export function meta({ params }: { params: { slug?: string } }): Array<Record<st
       image: `${site.url}/og/${article.slug}.png`,
     }),
   ];
+}
+
+// Body chunks load on demand; a failed fetch (offline, deploy swap) must not
+// take the whole layout down — show a reading-local error inside the chrome.
+export function ErrorBoundary() {
+  return (
+    <RouteErrorCard
+      title="Reading interrupted"
+      detail="This article failed to load. Check the connection and try again — the archive itself is intact."
+    />
+  );
 }
 
 export default function FilePage() {

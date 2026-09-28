@@ -9,7 +9,8 @@ async function hydrate() {
   const match = /^\/files\/([^/]+)\/?$/.exec(window.location.pathname);
   if (match) {
     const { preloadArticle } = await import("./lib/content");
-    await preloadArticle(decodeURIComponent(match[1]));
+    const { decodeSlugSegment } = await import("./lib/slug");
+    await preloadArticle(decodeSlugSegment(match[1]));
   }
   startTransition(() => {
     hydrateRoot(document, <HydratedRouter />, {
