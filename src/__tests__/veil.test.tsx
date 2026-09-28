@@ -77,6 +77,56 @@ describe("Veil", () => {
     vi.unstubAllGlobals(); // 回到 setup.ts 的默认 matchMedia 存根
   });
 
+  it("respects navigation cancelled by the caller", async () => {
+    render(
+      <MemoryRouter>
+        <VeilProvider>
+          <LinkUnderVeil to="/away" onClick={(event) => event.preventDefault()}>
+            Cancel
+          </LinkUnderVeil>
+        </VeilProvider>
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByText("Cancel"));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1200);
+    });
+    expect(navigateSpy).not.toHaveBeenCalled();
+  });
+
+  it("preserves new-window link behavior", async () => {
+    const onClick = vi.fn();
+    render(
+      <MemoryRouter>
+        <VeilProvider>
+          <LinkUnderVeil to="/away" target="_blank" onClick={onClick}>
+            New window
+          </LinkUnderVeil>
+        </VeilProvider>
+      </MemoryRouter>,
+    );
+    const event = new MouseEvent("click", { bubbles: true, cancelable: true });
+    act(() => {
+      screen.getByText("New window").dispatchEvent(event);
+    });
+    expect(event.defaultPrevented).toBe(false);
+    expect(onClick).toHaveBeenCalledOnce();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1200);
+    });
+    expect(navigateSpy).not.toHaveBeenCalled();
+  });
+
+  it("cancels pending navigation when the provider unmounts", async () => {
+    const view = renderApp();
+    fireEvent.click(screen.getByText("Go away"));
+    view.unmount();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1200);
+    });
+    expect(navigateSpy).not.toHaveBeenCalled();
+  });
+
   it("点击后盖下并完成导航，随后揭开", async () => {
     renderApp();
     await act(async () => {

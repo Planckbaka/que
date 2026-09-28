@@ -18,7 +18,7 @@ export function TypewriterText({
   caret = true,
 }: TypewriterTextProps) {
   const reduced = useReducedMotion();
-  const [count, setCount] = useState(() => (reduced ? text.length : 0));
+  const [count, setCount] = useState(0);
   const done = count >= text.length;
 
   useEffect(() => {

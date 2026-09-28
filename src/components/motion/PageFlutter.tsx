@@ -29,14 +29,14 @@ export function PageFlutter({ className }: { className?: string }) {
       {PAGES.map((p) => (
         <motion.span
           key={p.left + p.top}
-          className="absolute block border border-ink/25 bg-paper/85"
+          className="page-flutter-sheet absolute block border border-ink/25 bg-paper/85"
           style={{
             left: p.left,
             width: p.size,
             height: p.size * 1.32,
-            top: reduced ? "30%" : p.top,
-            opacity: reduced ? 0.35 : undefined,
+            top: p.top,
           }}
+          initial={{ y: "0vh", rotate: p.rotate }}
           animate={reduced ? undefined : { y: ["0vh", "125vh"], rotate: [p.rotate, p.rotate + 28] }}
           transition={
             reduced

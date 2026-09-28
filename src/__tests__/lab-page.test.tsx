@@ -20,8 +20,8 @@ function renderLab() {
 describe("LabPage", () => {
   it("stamps the evidence lab masthead", () => {
     renderLab();
-    expect(screen.getAllByText(/EVIDENCE LAB/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/Motion on Exhibit/i);
+    expect(screen.getAllByText(/Design Lab/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/Small Experiments/i);
   });
 
   it("hangs a placard for every primitive under glass", () => {

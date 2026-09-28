@@ -18,12 +18,11 @@ import { Switch } from "@/components/ui/switch";
 import { site, socialMeta } from "@/lib/site";
 
 export function meta() {
-  const description =
-    "The motion showroom: every transition primitive in The Magpie Files, live under glass.";
+  const description = "A collection of small interactive design experiments from my personal blog.";
   return [
     { title: `Evidence Lab · ${site.title}` },
     { name: "description", content: description },
-    ...socialMeta({ title: "Evidence Lab", description }),
+    ...socialMeta({ path: "/lab", title: "Evidence Lab", description }),
   ];
 }
 
@@ -43,7 +42,7 @@ function VeilDemo() {
     <div className="flex items-center gap-6">
       <LinkUnderVeil
         to="/lab"
-        className="border-2 border-line bg-card px-5 py-3 font-machine text-xs font-bold uppercase tracking-[0.22em] shadow-print-sm"
+        className="border-2 border-line bg-card text-card-foreground px-5 py-3 font-machine text-xs font-bold uppercase tracking-[0.22em] shadow-print-sm"
       >
         Wipe to myself
       </LinkUnderVeil>
@@ -60,7 +59,7 @@ function WorldDemo() {
     <div className="flex items-center gap-6">
       <Switch checked={world === "black"} onCheckedChange={toggle} aria-label="Toggle the world" />
       <p className="font-machine text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        Current world: {world} — red is reality, black is the detective's
+        Current world: {world} — red for engineering, black for algorithms
       </p>
     </div>
   );
@@ -71,18 +70,21 @@ function WorldDemo() {
 export default function LabPage() {
   return (
     <div className="relative min-h-svh bg-background text-foreground">
-      <ChapterNumeral numeral="VIII" className="-top-4 right-0 text-[clamp(10rem,24vw,20rem)]" />
+      <ChapterNumeral
+        numeral="VIII"
+        className="hidden md:block -top-4 right-0 text-[clamp(10rem,24vw,20rem)]"
+      />
       <ReadingFolio total={4} />
-      <section className="relative px-6 pt-16 pb-12 md:px-10">
+      <section className="relative mx-auto max-w-[76rem] px-6 pt-16 pb-12 md:px-10">
         <p className="font-machine text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
-          Evidence Lab · 动效陈列室
+          Design Lab / Interactive studies
         </p>
         <h1 className="mt-4 font-display text-[clamp(3rem,8vw,6rem)] uppercase leading-[0.95]">
-          Motion on Exhibit
+          Small Experiments
         </h1>
         <p className="mt-4 max-w-[52ch] font-body text-lg text-muted-foreground">
-          Eight primitives, one case. Every transition in this publication is demonstrated here,
-          live, under glass.
+          A working sketchbook for this blog’s visual language. Explore the typography, paper
+          textures, and interactions used throughout the site.
         </p>
       </section>
 
@@ -90,7 +92,7 @@ export default function LabPage() {
         <section className="space-y-6">
           <Placard name="AnagramText" note="seeded scramble · resolves once on mount" />
           <AnagramText
-            text="ATTICUS PUND"
+            text="ORION ARCH"
             className="font-display text-6xl uppercase tracking-tight md:text-7xl"
           />
         </section>
@@ -141,7 +143,7 @@ export default function LabPage() {
             {["PLATE I", "PLATE II", "PLATE III"].map((plate) => (
               <div
                 key={plate}
-                className="flex h-48 w-[60vw] shrink-0 items-center justify-center border-2 border-line bg-card font-display text-4xl uppercase shadow-print-sm md:w-[32vw]"
+                className="flex h-48 w-[60vw] shrink-0 items-center justify-center border-2 border-line bg-card text-card-foreground font-display text-4xl uppercase shadow-print-sm md:w-[32vw]"
               >
                 {plate}
               </div>
@@ -154,19 +156,19 @@ export default function LabPage() {
           <CenterSeam
             left={
               <div className="flex h-full items-center justify-center font-display text-3xl uppercase">
-                Reality
+                Engineering
               </div>
             }
             right={
               <div className="flex h-full items-center justify-center font-display text-3xl uppercase">
-                Fiction
+                Algorithms
               </div>
             }
           />
         </section>
 
         <section className="space-y-6">
-          <Placard name="Veil" note="route wipe · busy-guarded · view-transition enhanced" />
+          <Placard name="Veil" note="route wipe · cover, navigate, reveal" />
           <VeilDemo />
         </section>
 
@@ -186,7 +188,7 @@ export default function LabPage() {
         <footer className="border-t-2 border-line pt-8">
           <PageFlutter className="float-right" />
           <p className="font-machine text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
-            Lab catalog No. 1954-PYE-VIII · printed nowhere
+            Design studies / Orion Arch
           </p>
         </footer>
       </div>

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HorizontalRail } from "@/components/motion/HorizontalRail";
 import { railShift } from "@/lib/motion";
@@ -61,5 +61,66 @@ describe("HorizontalRail", () => {
     const outer = screen.getByLabelText("rail-pinned");
     expect(outer).toHaveAttribute("data-variant", "pinned");
     expect(outer.querySelector(".sticky")).not.toBeNull();
+  });
+
+  it("reserves vertical travel from the actual clipping width and updates on resize", () => {
+    render(
+      <HorizontalRail ariaLabel="sized-rail">
+        <span>plate</span>
+      </HorizontalRail>,
+    );
+    const outer = screen.getByLabelText("sized-rail");
+    const viewport = outer.firstElementChild as HTMLDivElement;
+    const track = screen.getByTestId("rail-track");
+    Object.defineProperty(track, "scrollWidth", { configurable: true, value: 1600 });
+    Object.defineProperty(viewport, "clientWidth", { configurable: true, value: 800 });
+    Object.defineProperty(viewport, "offsetHeight", { configurable: true, value: 600 });
+
+    act(() => window.dispatchEvent(new Event("resize")));
+    expect(outer).toHaveStyle({ height: "1400px" });
+
+    Object.defineProperty(viewport, "clientWidth", { configurable: true, value: 1000 });
+    act(() => window.dispatchEvent(new Event("resize")));
+    expect(outer).toHaveStyle({ height: "1200px" });
+
+    Object.defineProperty(viewport, "clientWidth", { configurable: true, value: 1800 });
+    act(() => window.dispatchEvent(new Event("resize")));
+    expect(outer).toHaveStyle({ height: "600px" });
+  });
+
+  it("removes the pinned travel when reduced motion is enabled after mounting", () => {
+    let preferenceChanged: (() => void) | undefined;
+    const media = {
+      matches: false,
+      addEventListener: vi.fn((_event: string, listener: () => void) => {
+        preferenceChanged = listener;
+      }),
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => media),
+    );
+    render(
+      <HorizontalRail ariaLabel="adaptive-rail">
+        <span>plate</span>
+      </HorizontalRail>,
+    );
+    const outer = screen.getByLabelText("adaptive-rail");
+    const viewport = outer.firstElementChild as HTMLDivElement;
+    Object.defineProperty(screen.getByTestId("rail-track"), "scrollWidth", { value: 1600 });
+    Object.defineProperty(viewport, "clientWidth", { value: 800 });
+    Object.defineProperty(viewport, "offsetHeight", { value: 600 });
+    act(() => window.dispatchEvent(new Event("resize")));
+    expect(outer.style.height).toBe("1400px");
+
+    act(() => {
+      media.matches = true;
+      preferenceChanged?.();
+    });
+    expect(outer).toHaveAttribute("data-variant", "native");
+    expect(outer.style.height).toBe("");
+    expect(viewport).toHaveClass("overflow-x-auto");
+    expect(viewport).not.toHaveClass("sticky");
   });
 });

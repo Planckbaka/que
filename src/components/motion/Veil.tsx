@@ -6,6 +6,7 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -32,6 +33,8 @@ export function useVeil(): { travel: (to: string) => void } {
 export function VeilProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const busy = useRef(false);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
   const [covering, setCovering] = useState(false);
 
   const travel = useCallback(
@@ -44,9 +47,9 @@ export function VeilProvider({ children }: { children: ReactNode }) {
       if (busy.current) return; // 防重入
       busy.current = true;
       setCovering(true);
-      window.setTimeout(() => {
+      timer.current = window.setTimeout(() => {
         navigate(to);
-        window.setTimeout(() => {
+        timer.current = window.setTimeout(() => {
           setCovering(false);
           busy.current = false;
         }, VEIL_HALF_MS);
@@ -89,9 +92,21 @@ export function LinkUnderVeil({ to, onClick, ...rest }: LinkUnderVeilProps) {
     <Link
       to={to}
       onClick={(e) => {
-        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-        e.preventDefault();
         onClick?.(e);
+        if (
+          e.defaultPrevented ||
+          e.button !== 0 ||
+          e.metaKey ||
+          e.ctrlKey ||
+          e.shiftKey ||
+          e.altKey ||
+          (rest.target && rest.target !== "_self") ||
+          rest.download != null ||
+          rest.reloadDocument ||
+          /^[a-z][a-z\d+.-]*:|^\/\//i.test(to)
+        )
+          return;
+        e.preventDefault();
         travel(to);
       }}
       {...rest}

@@ -1,89 +1,87 @@
 import { Magpie } from "@/components/magpie/silhouettes";
-import { ChapterNumeral } from "@/components/motion/ChapterNumeral";
 import { LinkUnderVeil } from "@/components/motion/Veil";
 import { site, socialMeta } from "@/lib/site";
 
 export function meta() {
   const description =
-    "The colophon: who writes The Magpie Files, how the edition is set, printed, and bound.";
+    "About Orion Arch and this personal notebook on Python, Go, and backend systems.";
   return [
-    { title: `Colophon · ${site.title}` },
+    { title: `About · ${site.title}` },
     { name: "description", content: description },
-    ...socialMeta({ title: "Colophon", description }),
+    ...socialMeta({ path: "/about", title: "About", description }),
   ];
 }
 
-const EDITION: Array<[string, string]> = [
-  ["Set in", "Anton · Crimson Pro · Courier Prime"],
-  ["Printed in", "three inks — vermillion, warm ink, aged paper"],
-  ["Motion engine", "Motion, scrubbed by Lenis · wipes, never fades"],
-  ["Bound with", "React Router v7 framework mode, prerendered to static paper"],
-  ["Later printings", "giscus marginalia · pagefind index — pending"],
-];
-
-// Colophon (spec §2/D5): the About page written as a book's edition record.
 export default function AboutPage() {
   return (
-    <div className="relative min-h-svh bg-background text-foreground">
-      <ChapterNumeral numeral="MMXXVI" className="-top-4 right-0 text-[clamp(8rem,20vw,17rem)]" />
-      <section className="relative mx-auto max-w-[76rem] px-6 pt-16 pb-24 md:px-10">
-        <p className="font-machine text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
-          Colophon · 版权页
+    <div className="reading-paper min-h-svh">
+      <section className="mx-auto max-w-[76rem] px-6 py-14 md:px-10 md:py-20">
+        <p className="font-machine text-xs font-bold uppercase tracking-[0.2em]">
+          About / The author
         </p>
-        <h1 className="mt-4 font-display text-[clamp(3rem,8vw,6rem)] uppercase leading-[0.95]">
-          Notes on the Edition
+        <h1 className="mt-5 font-display text-[clamp(3.5rem,9vw,7rem)] uppercase leading-none">
+          {site.author}
         </h1>
-
-        <div className="mt-12 grid gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-6 font-body text-lg leading-relaxed">
+        <div className="mt-10 grid gap-12 border-t-2 border-ink pt-10 lg:grid-cols-[1.2fr_0.8fr] lg:gap-20">
+          <div className="space-y-6 font-body text-xl leading-relaxed">
             <p>
-              <strong className="font-machine text-sm font-bold uppercase tracking-[0.18em]">
-                {site.author}
-              </strong>{" "}
-              writes both sides of the seam: a backend engineer (Go, Python, and the infrastructure
-              between them) in the red world, and a neural-network algorithms detective in the black
-              — where every loss function is a case worth closing.
+              I’m a Python and Go backend engineer, focused on APIs, concurrency, and reliable
+              services.
             </p>
             <p>
-              The Magpie Files is that dual life, bound as one publication. Articles are set from
-              Markdown case files, validated at the press, prerendered to static paper, and bound
-              with hard-offset print shadows. The magpie counts the sorrows; the reader counts the
-              pages.
+              This blog is where I work through what I’m learning. I write about service
+              architecture, performance, and AI infrastructure — with code, small experiments, and
+              explanations I can return to later.
             </p>
-            <div className="flex flex-wrap gap-6 pt-2 font-machine text-xs font-bold uppercase tracking-[0.22em]">
-              <LinkUnderVeil
-                to="/files"
-                className="border-b-2 border-line pb-1 hover:border-foreground"
-              >
-                Open the archive
+            <p>
+              Engineering Notes follows the software side. Frontier Notes explores AI systems and
+              emerging runtime capabilities. Both start with the same question: how does this
+              actually work?
+            </p>
+            <div className="flex flex-wrap gap-6 pt-4 font-machine text-xs font-bold uppercase tracking-[0.12em]">
+              <LinkUnderVeil to="/files" className="border-b border-ink py-2">
+                Read the articles →
               </LinkUnderVeil>
-              <a href="/rss.xml" className="border-b-2 border-line pb-1 hover:border-foreground">
-                RSS Feed
+              <a href={site.github} className="border-b border-ink py-2">
+                Find me on GitHub ↗
+              </a>
+              <a href="/rss.xml" className="border-b border-ink py-2">
+                Follow via RSS ↗
               </a>
             </div>
           </div>
-
-          <div className="on-card h-fit border-2 border-line bg-card p-8 text-card-foreground shadow-print">
-            <dl>
-              {EDITION.map(([term, detail]) => (
-                <div
-                  key={term}
-                  className="flex flex-col gap-1 border-b border-line/40 py-4 first:pt-0 last:border-b-0 last:pb-0"
-                >
-                  <dt className="font-machine text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
-                    {term}
+          <aside className="h-fit border-2 border-ink p-7 shadow-print md:p-9">
+            <Magpie aria-hidden="true" className="mb-6 size-16 text-blood" />
+            <h2 className="font-display text-3xl uppercase">Currently exploring</h2>
+            <p className="mt-4 font-body text-lg leading-relaxed">
+              My learning notes connect backend fundamentals with the systems that serve modern AI.
+            </p>
+            <dl className="mt-6 space-y-5 border-t border-ink pt-6">
+              {[
+                ["Go", "Scheduling, cancellation, CPU budgets, and predictable latency."],
+                ["Python", "Async services, bounded concurrency, and evolving runtimes."],
+                ["LLM systems", "Attention, MoE routing, and DSpark speculative decoding."],
+              ].map(([topic, detail]) => (
+                <div key={topic}>
+                  <dt className="font-machine text-xs font-bold uppercase tracking-[0.12em]">
+                    {topic}
                   </dt>
-                  <dd className="font-body text-base">{detail}</dd>
+                  <dd className="mt-2 font-body text-lg leading-relaxed">{detail}</dd>
                 </div>
               ))}
             </dl>
-            <div className="flex items-center justify-between pt-6">
-              <span className="font-machine text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
-                First edition · August 2026
-              </span>
-              <Magpie className="size-6" />
-            </div>
-          </div>
+            <p className="mt-6 border-t border-ink pt-6 font-body text-base leading-relaxed">
+              A small design note: the paper, ink, and silhouettes are inspired by the opening
+              titles of <em>Magpie Murders</em>. The writing and experiments here are my own
+              notebook.
+            </p>
+            <LinkUnderVeil
+              to="/lab"
+              className="mt-6 inline-block border-b border-ink py-2 font-machine text-xs font-bold uppercase tracking-[0.12em]"
+            >
+              Explore the design lab →
+            </LinkUnderVeil>
+          </aside>
         </div>
       </section>
     </div>

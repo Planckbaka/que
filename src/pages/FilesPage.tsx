@@ -8,24 +8,24 @@ import { site, socialMeta } from "@/lib/site";
 
 export function meta() {
   const description =
-    "Every case on public record — algorithm files from the black world, engineering notes from the red, grouped by world.";
+    "Articles on backend engineering, infrastructure, neural networks, and machine learning.";
   return [
-    { title: `The Archive · ${site.title}` },
+    { title: `Articles · ${site.title}` },
     { name: "description", content: description },
-    ...socialMeta({ title: "The Archive", description }),
+    ...socialMeta({ path: "/files", title: "Articles", description }),
   ];
 }
 
 const TRACKS: Array<{ world: World; heading: string; kicker: string }> = [
   {
     world: "black",
-    heading: "Algorithm Files",
-    kicker: "Black world · the detective's track",
+    heading: "Frontier Notes",
+    kicker: "AI systems · Runtimes · Algorithms",
   },
   {
     world: "red",
     heading: "Engineering Notes",
-    kicker: "Red world · the author's track",
+    kicker: "Go · Python · Systems",
   },
 ];
 
@@ -34,7 +34,7 @@ function FileCard({ article }: { article: Article }) {
   return (
     <LinkUnderVeil
       to={`/files/${article.slug}`}
-      className="on-card block border-2 border-line bg-card p-8 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-1"
+      className="on-card block border-2 border-line bg-card p-6 md:p-8 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-1"
     >
       <p className="font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
         {fm.kicker}
@@ -42,7 +42,7 @@ function FileCard({ article }: { article: Article }) {
       <h3 className="mt-3 font-display text-3xl uppercase leading-none">{fm.title}</h3>
       <p className="mt-4 font-body text-lg leading-relaxed">{fm.summary}</p>
       <p className="mt-6 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-        Filed {fm.date} · {article.readingTimeMinutes} min read
+        {fm.date} · {article.readingTimeMinutes} min read
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         {fm.tags.map((tag) => (
@@ -61,17 +61,17 @@ export default function FilesPage() {
   const ordered = world === "black" ? TRACKS : [...TRACKS].reverse();
 
   return (
-    <div className="min-h-svh bg-background text-foreground">
-      <section className="px-6 pt-16 pb-12 md:px-10">
+    <div className="reading-paper min-h-svh">
+      <section className="reading-paper mx-auto max-w-[76rem] px-6 pt-12 pb-12 md:px-10 md:pt-16">
         <p className="font-machine text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
-          The Archive · 档案墙
+          My notebook / All writing
         </p>
         <h1 className="mt-4 font-display text-[clamp(3rem,8vw,6rem)] uppercase leading-[0.95]">
-          Every Case on Record
+          Articles & Notes
         </h1>
         <p className="mt-4 max-w-[52ch] font-body text-lg text-muted-foreground">
-          Two tracks, one investigation. Your current world leads the shelf; flip the switch to
-          re-weight the files.
+          Notes on software and machine learning, collected in two reading paths. Find an article or
+          browse by subject below.
         </p>
         <div className="mt-8">
           <ArchiveSearch />
@@ -81,8 +81,9 @@ export default function FilesPage() {
       {ordered.map((track) => (
         <section
           key={track.world}
+          id={track.world}
           data-world={track.world}
-          className="border-t-2 border-ink bg-background px-6 py-14 md:px-10"
+          className="scroll-mt-6 border-t-2 border-ink bg-background px-6 py-14 text-foreground md:px-10"
         >
           <header className="mx-auto max-w-[76rem]">
             <p className="font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
@@ -96,7 +97,7 @@ export default function FilesPage() {
             ))}
             {grouped[track.world].length === 0 && (
               <p className="font-machine text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
-                No files on public record yet — the detective is still writing.
+                No articles in this collection yet. I’m still working on the next note.
               </p>
             )}
           </div>

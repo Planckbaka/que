@@ -1,18 +1,27 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 type RedactedProps = {
   children: ReactNode;
   title?: string;
 };
 
-export function Redacted({ children, title = "Declassified on hover" }: RedactedProps) {
+export function Redacted({ children, title = "Reveal or hide this note" }: RedactedProps) {
+  const [revealed, setRevealed] = useState(false);
   return (
-    <span
+    <button
+      type="button"
       title={title}
-      className="cursor-help select-none bg-[var(--redaction)] px-1 text-transparent transition-colors duration-150 hover:bg-transparent hover:text-inherit"
+      aria-expanded={revealed}
+      onClick={() => setRevealed((value) => !value)}
+      className={`inline cursor-pointer px-1 text-left transition-colors duration-150 hover:bg-transparent hover:text-inherit ${
+        revealed ? "bg-transparent text-inherit" : "bg-[var(--redaction)] text-transparent"
+      }`}
     >
-      <span className="sr-only">{children}</span>
+      <span className="sr-only">
+        {revealed ? "Hide note: " : "Reveal note: "}
+        {children}
+      </span>
       <span aria-hidden="true">{children}</span>
-    </span>
+    </button>
   );
 }

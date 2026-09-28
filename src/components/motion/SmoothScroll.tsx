@@ -31,6 +31,7 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     const onClick = (event: MouseEvent) => {
       const anchor = (event.target as HTMLElement | null)?.closest('a[href^="#"]');
       if (!(anchor instanceof HTMLAnchorElement)) return;
+      if (anchor.hasAttribute("data-native-scroll")) return;
       const href = anchor.getAttribute("href");
       if (!href || href === "#") return;
       let el: Element | null = null;

@@ -38,7 +38,7 @@ function Harness({ configured }: { configured?: boolean }) {
 describe("GiscusComments unconfigured (P4 default)", () => {
   it("prints the later-printing notice and injects nothing", () => {
     const { container } = render(<Harness />);
-    expect(screen.getByText(/arrive in a later printing/i)).toBeTruthy();
+    expect(screen.getByText(/Comments are not enabled/i)).toBeTruthy();
     expect(container.querySelector("script[src*='giscus']")).toBeNull();
   });
 });

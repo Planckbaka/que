@@ -1,18 +1,31 @@
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { GiscusComments } from "@/components/comments/GiscusComments";
-import { articleComponents } from "@/components/mdx/article-components";
+import { ArticleBody } from "@/components/mdx/ArticleBody";
 import { ChapterNumeral } from "@/components/motion/ChapterNumeral";
 import { ReadingFolio } from "@/components/motion/ReadingFolio";
-import { getArticle, publishedArticles } from "@/lib/content";
+import { getArticle, preloadArticle, publishedArticles } from "@/lib/content";
 import { romanNumeral } from "@/lib/motion";
 import { site, socialMeta } from "@/lib/site";
+import NotFoundPage, { meta as notFoundMeta } from "./NotFoundRedirect";
+
+// Resolve the body before rendering so prerendered HTML contains visible text,
+// rather than a streamed Suspense placeholder that a static indexer ignores.
+export async function loader({ params }: { params: { slug?: string } }) {
+  await preloadArticle(params.slug ?? "");
+  return null;
+}
+export async function clientLoader(args: Parameters<typeof loader>[0]) {
+  await preloadArticle(args.params.slug ?? "");
+  return null;
+}
+clientLoader.hydrate = true as const;
 
 // Minimal case-file reader (P2 pipeline proof). P3 replaces this with the full
 // 正文模板: _seo layout, Folio reading progress, RunningHead/Footer chrome.
 export function meta({ params }: { params: { slug?: string } }): Array<Record<string, string>> {
   const article = getArticle(params.slug ?? "");
   if (!article) {
-    return [{ title: `Sealed File · ${site.title}` }];
+    return notFoundMeta();
   }
   const { frontmatter: fm } = article;
   return [
@@ -29,43 +42,27 @@ export function meta({ params }: { params: { slug?: string } }): Array<Record<st
   ];
 }
 
-function SealedNotice({ slug }: { slug?: string }) {
-  return (
-    <main
-      data-world="black"
-      className="flex min-h-svh items-center justify-center bg-background text-foreground"
-    >
-      <div className="border-2 border-line bg-card px-10 py-8 text-center shadow-print">
-        <p className="font-display text-4xl uppercase">Sealed File</p>
-        <p className="mt-3 font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
-          {slug ? `Case ${slug} is not on public record` : "Case not on public record"}
-        </p>
-      </div>
-    </main>
-  );
-}
-
 export default function FilePage() {
   const { slug } = useParams();
   const article = getArticle(slug ?? "");
   if (!article || article.frontmatter.draft) {
-    return <SealedNotice slug={slug} />;
+    return <NotFoundPage />;
   }
   const { frontmatter: fm, Component } = article;
   // Chapter numeral = position in the published shelf (monument budget: this
   // numeral is the one monumental element on the reading view).
   const ordinal = publishedArticles.findIndex((entry) => entry.slug === article.slug);
   return (
-    <main data-world={fm.world} className="relative min-h-svh bg-background text-foreground">
+    <div data-world={fm.world} className="relative min-h-svh bg-background text-foreground">
       <ChapterNumeral
         numeral={romanNumeral(ordinal + 1)}
-        className="-top-8 right-0 text-[clamp(10rem,26vw,22rem)]"
+        className="hidden md:block -top-8 right-0 text-[clamp(10rem,26vw,22rem)]"
       />
       <ReadingFolio total={article.readingTimeMinutes} />
-      <article className="mx-auto max-w-[76rem] px-6 py-16 md:px-10">
+      <article className="relative z-10 mx-auto max-w-[76rem] px-6 py-16 md:px-10">
         <div
           data-pagefind-body
-          className="on-card case-file mx-auto max-w-[72ch] border-2 border-line bg-card p-8 text-card-foreground shadow-print-lg md:p-14"
+          className="on-card case-file mx-auto max-w-[72ch] border-2 border-line bg-card p-5 text-card-foreground shadow-print-lg sm:p-8 md:p-14"
         >
           <p className="font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
             {fm.kicker}
@@ -74,16 +71,38 @@ export default function FilePage() {
             {fm.title}
           </h1>
           <p className="mt-6 font-machine text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            Filed {fm.date} · {article.readingTimeMinutes} min read
+            By {site.author} · {fm.date} · {article.readingTimeMinutes} min read
           </p>
           <div className="mt-10">
-            <Component components={articleComponents} />
+            <ArticleBody key={article.slug} Component={Component} />
           </div>
+          <nav
+            data-pagefind-ignore
+            aria-label="Related articles"
+            className="mt-12 border-t border-line pt-6"
+          >
+            <h2>Continue reading</h2>
+            <ul>
+              {publishedArticles
+                .filter((entry) => entry.slug !== article.slug)
+                .map((entry) => ({
+                  entry,
+                  score: entry.frontmatter.tags.filter((tag) => fm.tags.includes(tag)).length,
+                }))
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 3)
+                .map(({ entry }) => (
+                  <li key={entry.slug}>
+                    <Link to={`/files/${entry.slug}`}>{entry.frontmatter.title}</Link>
+                  </li>
+                ))}
+            </ul>
+          </nav>
           <div className="mt-14">
             <GiscusComments />
           </div>
         </div>
       </article>
-    </main>
+    </div>
   );
 }

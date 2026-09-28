@@ -16,7 +16,7 @@ import { meta as showcaseMeta } from "@/pages/ShowcasePage";
 describe("route meta exports ship social cards", () => {
   it("showcase meta carries the site identity", () => {
     const tags = showcaseMeta();
-    expect(tags.find((t) => "title" in t)?.title).toContain("The Magpie Files");
+    expect(tags.find((t) => "title" in t)?.title).toContain("Orion Arch");
     expect(
       tags.some((t) => t.content?.includes("og:image")) ||
         tags.some((t) => t.property === "og:image"),
@@ -31,6 +31,7 @@ describe("route meta exports ship social cards", () => {
       expect(tags.some((t) => t.name === "description")).toBe(true);
       expect(tags.some((t) => t.name === "twitter:card")).toBe(true);
       expect(tags.some((t) => t.property === "og:image")).toBe(true);
+      expect(tags.some((t) => t.rel === "canonical")).toBe(true);
     }
   });
 });
@@ -38,7 +39,7 @@ describe("route meta exports ship social cards", () => {
 describe("NotFoundRedirect", () => {
   it("meta marks the page sealed and the component mounts", () => {
     const tags = notFoundMeta();
-    expect(tags.find((t) => "title" in t)?.title).toContain("Sealed File");
+    expect(tags.find((t) => "title" in t)?.title).toContain("Page not found");
     expect(tags.some((t) => t.name === "description")).toBe(true);
     expect(
       render(

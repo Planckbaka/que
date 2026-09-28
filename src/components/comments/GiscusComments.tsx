@@ -55,7 +55,7 @@ export function GiscusComments({ config = site.comments }: { config?: GiscusConf
   if (!config) {
     return (
       <p className="border-t-2 border-line pt-6 font-machine text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
-        Reader marginalia arrive in a later printing — the case file stays open.
+        Comments are not enabled yet. You can follow new articles via RSS.
       </p>
     );
   }
