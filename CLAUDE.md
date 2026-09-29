@@ -10,11 +10,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+`AGENTS.md` is the always-current quick reference; the notes below add context.
+
 ```bash
 npm run dev          # react-router dev (framework mode, HMR)
 npm run build        # tsc -b && react-router build && pagefind --site build/client
-                     # -> build/client: 8 prerendered pages + og/ rss.xml sitemap.xml robots.txt pagefind/
-npm run preview      # vite preview --outDir build/client
+                     #   && node scripts/check-publication.ts (draft-leak + image/OG/count gates)
+                     # -> build/client: 13 prerendered pages (4 fixed + 9 published articles)
+                     #    + og/ rss.xml sitemap.xml robots.txt pagefind/ __spa-fallback.html
+npm run preview      # node scripts/preview.ts — NOT vite preview (see gotchas)
 npm run lint         # biome check .
 npm run lint:fix     # biome check --write . (formatter + fixer)
 npm run typecheck    # tsc -b --noEmit
@@ -50,9 +54,9 @@ Root provider tree (in `src/root.tsx`): `WorldProvider > SmoothScroll > VeilProv
 
 ### Content pipeline (P2) and pages (P3)
 
-- Single source of truth = `content/files/*.mdx`. One Zod schema (`src/lib/frontmatter.ts`: title/kicker/world/tags/summary/date/draft + slug rule + reading minutes) validates BOTH content readers — a bad file fails the build with its filename.
-- Node side `src/lib/content-index.ts` (fs scan): feeds `react-router.config.ts` prerender list, the OG/RSS/sitemap pipeline, and the `magpieCaseFiles` virtual module (vite plugin in `scripts/magpie-content.ts`) that hands reading times to the client bundle.
-- Client side `src/lib/content.ts` (`import.meta.glob` eager + schema parse): exposes `articles` / `publishedArticles` / `getArticle` / `groupByWorld` for route modules.
+- Single source of truth = `content/files/*.mdx`. One Zod schema (`src/lib/frontmatter.ts`: title/kicker/world/tags/summary/date/draft + slug rule + reading minutes) validates BOTH content readers — a bad file fails the build with its filename. Drafts are excluded at the scan level, before any import is generated.
+- Node side `src/lib/content-index.ts` (fs scan): feeds `react-router.config.ts` prerender list, the OG/RSS/sitemap pipeline, and the `magpieCaseFiles` virtual module (vite plugin in `scripts/magpie-content.ts`) that hands reading times to the client bundle and generates per-slug dynamic loaders.
+- Client side `src/lib/content.ts` (built from the virtual module, no eager glob): metadata for all published articles ships in the entry chunk; article BODIES load on demand per slug (`preloadArticle`), with server builds using static imports to keep prerendered HTML complete. `src/components/mdx/ArticleBody.tsx` renders the body plus the TOC.
 - `scripts/magpie-pipeline.ts` (Vite plugin, closeBundle): writes `build/client/og/{slug,index}.png` (satori+resvg), `rss.xml`, `sitemap.xml`, `robots.txt`, and strips `modulepreload` links from prerendered HTML (they flood the critical window; FCP 3.3s→2.1s — the Veil covers navigation latency).
 - MDX compiles via `@mdx-js/rollup` in `vite.config.ts` with remark frontmatter export + `@shikijs/rehype` dual themes (`src/lib/code-themes.ts`, palette-audited). Vocabulary (`Redacted/ClueChip/HalftoneImage/ExhibitCard`) injects via `components` prop from `src/components/mdx/article-components.tsx`.
 - Shiki dark-world flip: compiled HTML carries `--shiki-dark` vars; `[data-world="black"] .shiki` overrides with `!important` (inline styles beat plain stylesheet rules).
@@ -62,7 +66,7 @@ Root provider tree (in `src/root.tsx`): `WorldProvider > SmoothScroll > VeilProv
 ### Component layers
 
 - `src/components/ui/` — shadcn-style primitives on Radix behavior; overrides live inside each component's cva variants, never ad-hoc classNames at call sites.
-- `src/components/magpie/` — thematic primitives (ChapterHeading, ClueChip, Redacted, HalftoneImage, PaperGrain, BookSpine, MagpieCounter) + `silhouettes.tsx` filled-SVG motif library.
+- `src/components/magpie/` — thematic primitives (ChapterNumeral, ClueChip, Redacted, HalftoneImage, PaperGrain) + `silhouettes.tsx` filled-SVG motif library. Article illustrations use `ArticleFigure` (`src/components/mdx/`) — responsive WebP srcSet with the full-size PNG one click away; derivatives are generated manually via cwebp and enforced by `check-publication.ts`.
 - `src/components/motion/` — `motion/react` primitives: AnagramText (seeded deterministic scramble — SSG-safe), TypewriterText, MorphIn, PageFlutter, StaggerList, plus P0 foundation pieces:
   - `SmoothScroll.tsx` — Lenis mount (`duration: 0.8`), exposes `useSmoothScroll(): Lenis | null`; skips entirely under prefers-reduced-motion; intercepts `a[href^="#"]` with `scrollTo(el, { offset: -72 })`.
   - `Veil.tsx` — route-wipe transition: `VeilProvider` / `useVeil().travel(to)` / `LinkUnderVeil` / `VeilOverlay`; 550ms cover→navigate→reveal, ink `#17120c`, busy-guarded; `data-covering` attribute for tests.
@@ -81,3 +85,6 @@ Root provider tree (in `src/root.tsx`): `WorldProvider > SmoothScroll > VeilProv
 - Route `meta()` exports: root owns only the default title; every leaf ships its own title + description + `socialMeta(...)` (OG/Twitter) to avoid duplicate description tags.
 - Mobile: `html/body { overflow-x: clip }` guards against decorative bleed; verify full-page screenshot widths at 390px when adding monuments.
 - Client-safe module rule: anything imported by `src/lib/content.ts`/`frontmatter.ts` ships to the browser — no node-only deps there (reading-time's CJS entry pulls `node:stream/util` and hard-crashes `npm run dev`; it lives in `content-index.ts`, and reading minutes reach the client via the virtual module). Rollup hides this class of bug at build time — **always smoke `npm run dev` too**.
+- Route errors never drop the reader on the router's default screen: `SeoLayout` carries a chrome-keeping `ErrorBoundary` (404-aware, noindex card for runtime errors) and `FilePage` has a reading-local one.
+- Veil navigation hands focus to the new page's `h1` (screen readers get context after the wipe); article→article transitions use a shorter 300ms wipe, everything else the full 550ms.
+- `scripts/preview.ts` is hardened: request paths are containment-checked and responses stream from disk (no request-controlled bytes in the body).

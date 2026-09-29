@@ -1,18 +1,9 @@
 // src/components/motion/SmoothScroll.tsx
 import Lenis from "lenis";
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { type ReactNode, useEffect } from "react";
 import "lenis/dist/lenis.css";
 
-const SmoothScrollContext = createContext<Lenis | null>(null);
-
-/** 读取 Lenis 实例；未挂载或 reduced-motion 降级时返回 null */
-export function useSmoothScroll(): Lenis | null {
-  return useContext(SmoothScrollContext);
-}
-
 export function SmoothScroll({ children }: { children: ReactNode }) {
-  const [lenis, setLenis] = useState<Lenis | null>(null);
-
   useEffect(() => {
     // matchMedia 实时监听：设置中途切换 reduce 立即停掉实例，切回再重建
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -25,14 +16,12 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     };
     const start = () => {
       instance = new Lenis({ duration: 0.8 });
-      setLenis(instance);
       rafId = requestAnimationFrame(raf);
     };
     const stop = () => {
       cancelAnimationFrame(rafId);
       instance?.destroy();
       instance = null;
-      setLenis(null);
     };
 
     if (!media.matches) start(); // reduce 生效时不创建任何实例
@@ -71,5 +60,5 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  return <SmoothScrollContext.Provider value={lenis}>{children}</SmoothScrollContext.Provider>;
+  return <>{children}</>;
 }

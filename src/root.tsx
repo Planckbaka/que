@@ -5,6 +5,8 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import "@fontsource/anton/latin-400.css";
 import "@fontsource/crimson-pro/latin-400.css";
 import "@fontsource/crimson-pro/latin-400-italic.css";
+// True bold for prose — without it <strong> renders as synthesized faux-bold.
+import "@fontsource/crimson-pro/latin-700.css";
 import "@fontsource/courier-prime/latin-400.css";
 import "@fontsource/courier-prime/latin-700.css";
 // The hero headline sets LCP; put its face in the critical chain's first hop.
