@@ -1,6 +1,6 @@
 # AGENTS.md
 
-**The Magpie Files (喜鹊档案)** — personal blog, React 19 + React Router v7 framework mode (`ssr: false` + prerender), Tailwind v4, MDX content, print/noir aesthetic.
+**The Magpie Files (喜鹊档案)** — personal blog, React 19 + React Router v7 framework mode (`ssr: false` + prerender), Tailwind v4, MDX content, print/noir aesthetic. Node >= 22.18 (preview/publication scripts rely on unflagged TS type stripping). CI (`.github/workflows/ci.yml`) runs lint + typecheck + vitest + full build on push/PR.
 
 **Read before styling anything:** `.opencode/skills/magpie-design/SKILL.md` is the design law (3-color palette, no gradients/blur/radius, motion budgets). It overrides all visual judgment. `CLAUDE.md` has a longer architecture write-up; `docs/superpowers/plans/` holds the P0–P4 phase plans.
 
@@ -31,9 +31,11 @@ npm run test:browser # playwright gate: serves build/client, drives every motion
 
 - **Client-safe module rule:** anything imported by `src/lib/content.ts` / `frontmatter.ts` ships to the browser — **no node-only deps there** (`reading-time` pulls `node:stream` and hard-crashes dev). Reading minutes reach the client via the virtual module. Rollup hides this class of bug at build time — **always smoke `npm run dev` too**. `src/__tests__/client-safe-modules.test.ts` guards the graph.
 - **Preview:** `npm run preview` runs `scripts/preview.ts`, which serves `build/client` with directory-index resolution. Plain `vite preview` serves root `index.html` for nested routes → hydration mismatch (#418) and remounted animations.
-- **Pagefind search** (`src/lib/pagefind.ts`) fetch-probes `/pagefind/pagefind.js` before dynamic import — the index only exists in build output; a missing index must throw cleanly, not crash module loading.
-- **Draft discipline:** `scripts/check-publication.ts` (part of `npm run build`) fails if any draft slug/title leaks into build artifacts, or if published article HTML is missing anchors/canonical or still shows the streamed fallback.
-- **Reduced motion:** the global CSS kill-switch at the bottom of `index.css` covers CSS animations only, **not** JS Motion springs — every motion component must degrade itself via `prefersReducedMotion()` (`src/lib/motion.ts`).
+- **Pagefind search** (`src/lib/pagefind.ts`) fetch-probes `/pagefind/pagefind.js` before dynamic import — the index only exists in build output; a missing index must throw cleanly, not crash module loading. Search result cards are `LinkUnderVeil`s (a plain `<a>` reload loses the world state).
+- **Draft discipline:** `scripts/check-publication.ts` (part of `npm run build`) fails if any draft slug/title leaks into build artifacts, if published article HTML is missing anchors/canonical, if a referenced `/images/…` derivative is missing (WebP derivatives are hand-made with cwebp — use `ArticleFigure` so srcSet stays consistent), if an OG card is missing, or if RSS/sitemap/prerender counts drift from `scanArticles()`.
+- **Error boundaries:** `SeoLayout` keeps the site chrome on route errors (404-aware; runtime errors get a noindex card) and `FilePage` has a reading-local boundary — don't render RRv7's default error screen anywhere.
+- **Veil:** navigation hands focus to the new page's `h1`; article→article wipes run 300ms (`VEIL_READING_HALF_MS`), everything else 550ms.
+- **Reduced motion:** the global CSS kill-switch at the bottom of `index.css` covers CSS animations only, **not** JS Motion springs — every motion component must degrade itself via `prefersReducedMotion()`; SmoothScroll and ChapterNumeral listen live for preference changes.
 - **World-scoped CSS:** Tailwind `@theme inline` vars freeze at `:root` — custom CSS must reference the underlying token (`var(--line)`, not `var(--color-line)`). Cards need the `.on-card` scope; world-scoped sections must paint `bg-background` or light text lands on a parent's red. Shiki dark-world flip needs `!important` (inline styles beat plain stylesheet rules).
 - **Fonts:** self-hosted via `@fontsource`, imported in `src/root.tsx` (there is no `main.tsx`).
 - **Route meta:** root owns only the default title; every leaf route ships its own title + description + `socialMeta(...)` to avoid duplicate description tags.
