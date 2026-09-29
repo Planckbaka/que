@@ -15,7 +15,7 @@ export function RunningHead() {
           <span>
             {site.author}
             <span className="mt-1 block text-[10px] tracking-normal">
-              个人技术博客 / Python &amp; Go
+              <span lang="zh">个人技术博客</span> / Python &amp; Go
             </span>
           </span>
         </LinkUnderVeil>

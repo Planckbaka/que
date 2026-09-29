@@ -11,19 +11,24 @@ import {
   useRef,
   useState,
 } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { EASE_PRINT, prefersReducedMotion } from "@/lib/motion";
 
 export const VEIL_HALF_MS = 550;
+// 连续阅读（文章 → 文章）缩短仪式：阅读等待减半，保留同样的擦除语言
+export const VEIL_READING_HALF_MS = 300;
+
+const READING_PATH = /^\/files\/[\w-]+/;
 
 type VeilState = {
   covering: boolean;
+  halfMs: number;
   travel: (to: string) => void;
 };
 
 const VeilStateContext = createContext<VeilState | null>(null);
 
-/** 路由擦除转场 API：travel("/path") = 盖下 550ms → 导航 → 揭开 550ms；reduced-motion 命中时跳过动画直接导航 */
+/** 路由擦除转场 API：travel("/path") = 盖下 → 导航 → 揭开；reduced-motion 命中时跳过动画直接导航 */
 export function useVeil(): { travel: (to: string) => void } {
   const ctx = useContext(VeilStateContext);
   if (!ctx) throw new Error("useVeil must be used inside VeilProvider");
@@ -32,33 +37,56 @@ export function useVeil(): { travel: (to: string) => void } {
 
 export function VeilProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const busy = useRef(false);
   const timer = useRef<number | undefined>(undefined);
+  const pendingFocus = useRef(false);
   useEffect(() => () => window.clearTimeout(timer.current), []);
   const [covering, setCovering] = useState(false);
+  const [halfMs, setHalfMs] = useState(VEIL_HALF_MS);
 
   const travel = useCallback(
     (to: string) => {
       if (prefersReducedMotion()) {
-        // reduced-motion：无动画即合规——跳过遮幅/揭开，直接导航
+        // reduced-motion：无动画即合规——跳过遮幅/揭开，直接导航（仍移交焦点）
+        pendingFocus.current = true;
         navigate(to);
         return;
       }
       if (busy.current) return; // 防重入
       busy.current = true;
+      // 文章 → 文章用短遮幅；其余（跨世界、进出阅读区）保留完整仪式
+      const half =
+        READING_PATH.test(to) && READING_PATH.test(location.pathname)
+          ? VEIL_READING_HALF_MS
+          : VEIL_HALF_MS;
+      setHalfMs(half);
       setCovering(true);
       timer.current = window.setTimeout(() => {
+        pendingFocus.current = true;
         navigate(to);
         timer.current = window.setTimeout(() => {
           setCovering(false);
           busy.current = false;
-        }, VEIL_HALF_MS);
-      }, VEIL_HALF_MS);
+        }, half);
+      }, half);
     },
-    [navigate],
+    [navigate, location.pathname],
   );
 
-  const state = useMemo(() => ({ covering, travel }), [covering, travel]);
+  // Veil 导航后把焦点移到新页 h1：否则焦点随旧链接卸载掉到 body，
+  // 读屏用户经历一次无声的黑场、落点失去上下文。
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname 变化本身就是触发器，effect 内无需读取
+  useEffect(() => {
+    if (!pendingFocus.current) return;
+    pendingFocus.current = false;
+    const heading = document.querySelector<HTMLElement>("main h1");
+    if (!heading || document.activeElement === heading) return;
+    heading.setAttribute("tabindex", "-1");
+    heading.focus();
+  }, [location.pathname]);
+
+  const state = useMemo(() => ({ covering, halfMs, travel }), [covering, halfMs, travel]);
 
   return <VeilStateContext.Provider value={state}>{children}</VeilStateContext.Provider>;
 }
@@ -75,7 +103,7 @@ export function VeilOverlay() {
       className="pointer-events-none fixed inset-0 z-[60] origin-center"
       initial={false}
       animate={{ scaleX: ctx.covering ? 1 : 0 }}
-      transition={{ duration: VEIL_HALF_MS / 1000, ease: EASE_PRINT }}
+      transition={{ duration: ctx.halfMs / 1000, ease: EASE_PRINT }}
       style={{ background: "#17120c" }}
     />
   );

@@ -11,3 +11,5 @@ output/
 .v2c/
 .video_agent/
 .zcodeignore
+.mimosa/
+.zcode/

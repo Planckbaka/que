@@ -47,7 +47,7 @@ function VeilDemo() {
         Wipe to myself
       </LinkUnderVeil>
       <p className="font-machine text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        550ms cover → navigate → reveal · never a fade
+        550ms cover → navigate → reveal (300ms between articles) · never a fade
       </p>
     </div>
   );

@@ -33,7 +33,20 @@ function Home() {
 }
 
 function Away() {
-  return <h1>Away</h1>;
+  return (
+    <main>
+      <h1>Away</h1>
+    </main>
+  );
+}
+
+function Article() {
+  return (
+    <main>
+      <h1>Article</h1>
+      <LinkUnderVeil to="/files/two">Next article</LinkUnderVeil>
+    </main>
+  );
 }
 
 function renderApp() {
@@ -127,7 +140,7 @@ describe("Veil", () => {
     expect(navigateSpy).not.toHaveBeenCalled();
   });
 
-  it("点击后盖下并完成导航，随后揭开", async () => {
+  it("点击后盖下并完成导航，随后揭开，焦点移交新页标题", async () => {
     renderApp();
     await act(async () => {
       fireEvent.click(screen.getByText("Go away"));
@@ -140,6 +153,30 @@ describe("Veil", () => {
       await vi.advanceTimersByTimeAsync(600);
     });
     expect(document.querySelector('[data-veil][data-covering="false"]')).not.toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Away" }));
+  });
+
+  it("文章→文章走短遮幅（300ms 内完成导航），焦点同样移交", async () => {
+    render(
+      <MemoryRouter initialEntries={["/files/one"]}>
+        <VeilProvider>
+          <Routes>
+            <Route path="/files/:slug" element={<Article />} />
+            <Route path="/away" element={<Away />} />
+          </Routes>
+          <VeilOverlay />
+        </VeilProvider>
+      </MemoryRouter>,
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByText("Next article"));
+      // 350ms：300ms 阅读遮幅已盖下并导航（550ms 口径此时还没盖完），尚未揭完
+      await vi.advanceTimersByTimeAsync(350);
+    });
+    expect(screen.getByRole("heading", { name: "Article" })).toBeInTheDocument();
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+    expect(navigateSpy).toHaveBeenCalledWith("/files/two");
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Article" }));
   });
 
   it("双击防重入：busy 窗口内的第二次 travel 不产生第二次 navigate", async () => {
@@ -179,5 +216,6 @@ describe("Veil", () => {
     expect(navigateSpy).toHaveBeenCalledTimes(1);
     expect(navigateSpy).toHaveBeenCalledWith("/away");
     expect(document.querySelector('[data-veil][data-covering="true"]')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Away" }));
   });
 });

@@ -10,8 +10,15 @@ import NotFoundPage from "./NotFoundRedirect";
 export default function SeoLayout() {
   return (
     <div className="min-h-svh">
+      {/* 键盘捷径：跳过 logo + 主导航直达正文（惯例放第一位，聚焦时才可见） */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:border-2 focus:border-ink focus:bg-paper focus:px-4 focus:py-2 focus:font-machine focus:text-xs focus:font-bold focus:uppercase focus:tracking-[0.14em]"
+      >
+        Skip to content
+      </a>
       <RunningHead />
-      <main>
+      <main id="main" tabIndex={-1} className="outline-none">
         <Outlet />
       </main>
       <SiteFooter />

@@ -64,6 +64,16 @@ export default function FilePage() {
   // Chapter numeral = position in the published shelf (monument budget: this
   // numeral is the one monumental element on the reading view).
   const ordinal = publishedArticles.findIndex((entry) => entry.slug === article.slug);
+  // 相关阅读只取有标签交集的文章——0 分凑数等于随机推荐，宁缺毋滥
+  const related = publishedArticles
+    .filter((entry) => entry.slug !== article.slug)
+    .map((entry) => ({
+      entry,
+      score: entry.frontmatter.tags.filter((tag) => fm.tags.includes(tag)).length,
+    }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
   return (
     <div data-world={fm.world} className="relative min-h-svh bg-background text-foreground">
       <ChapterNumeral
@@ -88,28 +98,22 @@ export default function FilePage() {
           <div className="mt-10">
             <ArticleBody key={article.slug} Component={Component} />
           </div>
-          <nav
-            data-pagefind-ignore
-            aria-label="Related articles"
-            className="mt-12 border-t border-line pt-6"
-          >
-            <h2>Continue reading</h2>
-            <ul>
-              {publishedArticles
-                .filter((entry) => entry.slug !== article.slug)
-                .map((entry) => ({
-                  entry,
-                  score: entry.frontmatter.tags.filter((tag) => fm.tags.includes(tag)).length,
-                }))
-                .sort((a, b) => b.score - a.score)
-                .slice(0, 3)
-                .map(({ entry }) => (
+          {related.length > 0 && (
+            <nav
+              data-pagefind-ignore
+              aria-label="Related articles"
+              className="mt-12 border-t border-line pt-6"
+            >
+              <h2>Continue reading</h2>
+              <ul>
+                {related.map(({ entry }) => (
                   <li key={entry.slug}>
                     <Link to={`/files/${entry.slug}`}>{entry.frontmatter.title}</Link>
                   </li>
                 ))}
-            </ul>
-          </nav>
+              </ul>
+            </nav>
+          )}
           <div className="mt-14">
             <GiscusComments />
           </div>

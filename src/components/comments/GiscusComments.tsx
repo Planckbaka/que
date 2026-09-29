@@ -73,7 +73,7 @@ export function GiscusComments({ config = site.comments }: { config?: GiscusConf
   return (
     <section aria-label="Reader marginalia" className="border-t-2 border-line pt-6">
       <p className="mb-4 font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
-        Marginalia · 旁注
+        Marginalia · <span lang="zh">旁注</span>
       </p>
       <div ref={hostRef} data-giscus-repo={config.repo} />
     </section>

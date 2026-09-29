@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { VeilProvider } from "@/components/motion/Veil";
 import { ArchiveSearch } from "@/components/search/ArchiveSearch";
 import { loadPagefind, type PagefindResult } from "@/lib/pagefind";
 
@@ -18,7 +20,13 @@ beforeEach(() => {
 
 async function renderSearch() {
   await act(async () => {
-    render(<ArchiveSearch />);
+    render(
+      <MemoryRouter>
+        <VeilProvider>
+          <ArchiveSearch />
+        </VeilProvider>
+      </MemoryRouter>,
+    );
   });
   return screen.getByRole("searchbox", { name: /search the archive/i });
 }
@@ -32,12 +40,38 @@ describe("ArchiveSearch", () => {
     render(<ArchiveSearch />);
     expect(await screen.findByText(/Search is temporarily unavailable/i)).toBeTruthy();
   });
-  it.each(["search", "fragment"])("degrades when the %s request fails", async (stage) => {
-    if (stage === "search") search.mockRejectedValue(new Error("offline"));
-    else
-      search.mockResolvedValue({ results: [{ data: () => Promise.reject(new Error("offline")) }] });
+  it("degrades when the search request fails", async () => {
+    search.mockRejectedValue(new Error("offline"));
     fireEvent.change(await renderSearch(), { target: { value: "match" } });
     expect(await screen.findByText(/Search is temporarily unavailable/i)).toBeTruthy();
+  });
+  it("drops a single unreadable result without disabling search", async () => {
+    search.mockResolvedValue({
+      results: [{ data: async () => result }, { data: () => Promise.reject(new Error("bad")) }],
+    });
+    fireEvent.change(await renderSearch(), { target: { value: "match" } });
+    expect(await screen.findByRole("link", { name: /Example/ })).toBeTruthy();
+    expect(screen.queryByText(/Search is temporarily unavailable/i)).toBeNull();
+  });
+  it("shows a searching indicator and clears it when results land", async () => {
+    let resolveSearch!: (value: {
+      results: Array<{ data: () => Promise<PagefindResult> }>;
+    }) => void;
+    search.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSearch = resolve;
+        }),
+    );
+    const input = await renderSearch();
+    fireEvent.change(input, { target: { value: "match" } });
+    // 300ms 防抖后才发起请求并亮出指示器
+    expect(await screen.findByText(/Searching…/i)).toBeTruthy();
+    await act(async () => {
+      resolveSearch({ results: [{ data: async () => result }] });
+    });
+    expect(await screen.findByRole("link", { name: /Example/ })).toBeTruthy();
+    expect(screen.queryByText(/Searching…/i)).toBeNull();
   });
   it("preserves literal tags and renders only actual highlights", async () => {
     search.mockResolvedValue({ results: [{ data: async () => result }] });
@@ -58,6 +92,10 @@ describe("ArchiveSearch", () => {
     search.mockResolvedValue({ results: [{ data: async () => result }] });
     const input = await renderSearch();
     fireEvent.change(input, { target: { value: "old" } });
+    // 等防抖放行 "old"，让第一次 search 挂起
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+    });
     fireEvent.change(input, { target: { value: "new" } });
     await screen.findByRole("link", { name: /Example/ });
     await act(async () => {

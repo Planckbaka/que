@@ -41,6 +41,7 @@
       "!build",
       "!.react-router",
       "!.omc",
+      "!.mimosa",
       "!.claude/settings.local.json",
       "!storybook-static"
     ]

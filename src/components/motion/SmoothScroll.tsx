@@ -1,7 +1,6 @@
 // src/components/motion/SmoothScroll.tsx
 import Lenis from "lenis";
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
-import { prefersReducedMotion } from "@/lib/motion";
 import "lenis/dist/lenis.css";
 
 const SmoothScrollContext = createContext<Lenis | null>(null);
@@ -15,18 +14,34 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
   const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion()) {
-      return; // 原生滚动，完全不创建实例
-    }
-    const instance = new Lenis({ duration: 0.8 });
-    setLenis(instance);
-
+    // matchMedia 实时监听：设置中途切换 reduce 立即停掉实例，切回再重建
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let instance: Lenis | null = null;
     let rafId = 0;
+
     const raf = (time: number) => {
-      instance.raf(time);
+      instance?.raf(time);
       rafId = requestAnimationFrame(raf);
     };
-    rafId = requestAnimationFrame(raf);
+    const start = () => {
+      instance = new Lenis({ duration: 0.8 });
+      setLenis(instance);
+      rafId = requestAnimationFrame(raf);
+    };
+    const stop = () => {
+      cancelAnimationFrame(rafId);
+      instance?.destroy();
+      instance = null;
+      setLenis(null);
+    };
+
+    if (!media.matches) start(); // reduce 生效时不创建任何实例
+
+    const onPreferenceChange = () => {
+      stop();
+      if (!media.matches) start();
+    };
+    media.addEventListener("change", onPreferenceChange);
 
     const onClick = (event: MouseEvent) => {
       const anchor = (event.target as HTMLElement | null)?.closest('a[href^="#"]');
@@ -40,18 +55,19 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
       } catch {
         return; // 非法选择器：放弃劫持，放行浏览器默认行为
       }
-      if (!el) return;
       if (!(el instanceof HTMLElement)) return;
       event.preventDefault();
-      instance.scrollTo(el, { offset: -72 });
+      // 锚点落点与 CSS scroll-margin-top 对齐（index.css 取 5rem）；
+      // Lenis 不读 scroll-margin，这里按元素实际值取偏移，不再写死。
+      const marginTop = Number.parseFloat(window.getComputedStyle(el).scrollMarginTop || "0");
+      instance?.scrollTo(el, { offset: Number.isNaN(marginTop) ? 0 : -marginTop });
     };
     document.addEventListener("click", onClick);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      media.removeEventListener("change", onPreferenceChange);
       document.removeEventListener("click", onClick);
-      instance.destroy();
-      setLenis(null);
+      stop();
     };
   }, []);
 

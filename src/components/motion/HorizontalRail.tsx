@@ -61,9 +61,10 @@ export function HorizontalRail({ children, ariaLabel }: RailProps) {
     >
       <div
         ref={viewportRef}
+        tabIndex={native ? 0 : undefined}
         className={
           native
-            ? "flex gap-10 overflow-x-auto"
+            ? "flex gap-10 overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-4"
             : "sticky top-0 flex h-svh items-center overflow-hidden"
         }
       >
