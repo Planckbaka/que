@@ -11,12 +11,11 @@ Attention is easier to reason about as a sequence of tensor transformations than
 
 This note builds a small CPU reference implementation. It is intended for inspecting shapes and testing invariants, not benchmarking an inference engine.
 
-<figure className="article-illustration">
-  <a href="/images/articles/attention-weighted-reading.png" target="_blank" rel="noreferrer" aria-label="Open illustration at full size in a new tab">
-    <img src="/images/articles/attention-weighted-reading-800.webp" srcSet="/images/articles/attention-weighted-reading-480.webp 480w, /images/articles/attention-weighted-reading-800.webp 800w, /images/articles/attention-weighted-reading-1254.webp 1254w" sizes="(max-width: 639px) calc(100vw - 92px), (max-width: 767px) calc(100vw - 116px), 600px" alt="A query scores three visible keys; their values contribute with different weights. Future positions are masked." width="1254" height="1254" loading="lazy" decoding="async" />
-  </a>
-  <figcaption>One query compares visible keys and takes a weighted sum of their values. Arrow widths illustrate weights, not measured probabilities. Future positions cannot contribute. The dashed divider marks the visibility boundary, not a computation path. <a href="/images/articles/attention-weighted-reading.png" target="_blank" rel="noreferrer">View full-size image (new tab)</a>. Illustration generated with GPT Image.</figcaption>
-</figure>
+<ArticleFigure
+  base="/images/articles/attention-weighted-reading"
+  alt="A query scores three visible keys; their values contribute with different weights. Future positions are masked."
+  caption="One query compares visible keys and takes a weighted sum of their values. Arrow widths illustrate weights, not measured probabilities. Future positions cannot contribute. The dashed divider marks the visibility boundary, not a computation path."
+/>
 
 ## The contract of one attention head
 

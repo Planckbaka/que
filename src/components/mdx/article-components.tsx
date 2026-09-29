@@ -4,6 +4,7 @@ import { ClueChip } from "@/components/magpie/ClueChip";
 import { ExhibitCard } from "@/components/magpie/ExhibitCard";
 import { HalftoneImage } from "@/components/magpie/HalftoneImage";
 import { Redacted } from "@/components/magpie/Redacted";
+import { ArticleFigure } from "./ArticleFigure";
 
 function CodeBlock(props: ComponentPropsWithoutRef<"pre">) {
   return (
@@ -25,4 +26,5 @@ export const articleComponents: MDXComponents = {
   ClueChip,
   HalftoneImage,
   ExhibitCard,
+  ArticleFigure,
 };

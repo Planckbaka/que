@@ -1,0 +1,5 @@
+# Cloudflare Pages redirects. Static assets (prerendered HTML directories,
+# hashed JS/CSS, images) are matched and served BEFORE these rules apply, so
+# this catch-all only fires for genuinely unknown paths — giving them the SPA
+# fallback shell with a true HTTP 404, mirroring scripts/preview.ts behavior.
+/* /__spa-fallback.html 404

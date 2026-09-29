@@ -9,12 +9,11 @@ date: 2026-09-05
 
 A fast draft is useful only if checking it costs less than the progress it enables. This is the backend question I bring to **DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation**, by Xin Cheng and collaborators, published as [arXiv:2607.05147v1](https://arxiv.org/abs/2607.05147) on July 6, 2026.
 
-<figure className="article-illustration">
-  <a href="/images/articles/dspark-verification-budget.png" target="_blank" rel="noreferrer" aria-label="Open illustration at full size in a new tab">
-    <img src="/images/articles/dspark-verification-budget-800.webp" srcSet="/images/articles/dspark-verification-budget-480.webp 480w, /images/articles/dspark-verification-budget-800.webp 800w, /images/articles/dspark-verification-budget-1254.webp 1254w" sizes="(max-width: 639px) calc(100vw - 92px), (max-width: 767px) calc(100vw - 116px), 600px" alt="Draft five candidate tokens, choose a three-token prefix using confidence and engine cost, then send that prefix to the target model for verification." width="1254" height="1254" loading="lazy" decoding="async" />
-  </a>
-  <figcaption>Conceptual scheduling view, not the full DSpark algorithm: confidence and engine cost help choose a prefix to verify. The five word cards are illustrative candidates, not literal tokenizer output. Drafting costs have already been paid; confidence does not certify factual correctness or replace the acceptance procedure. <a href="/images/articles/dspark-verification-budget.png" target="_blank" rel="noreferrer">View full-size image (new tab)</a>. Illustration generated with GPT Image.</figcaption>
-</figure>
+<ArticleFigure
+  base="/images/articles/dspark-verification-budget"
+  alt="Draft five candidate tokens, choose a three-token prefix using confidence and engine cost, then send that prefix to the target model for verification."
+  caption="Conceptual scheduling view, not the full DSpark algorithm: confidence and engine cost help choose a prefix to verify. The five word cards are illustrative candidates, not literal tokenizer output. Drafting costs have already been paid; confidence does not certify factual correctness or replace the acceptance procedure."
+/>
 
 ## What the paper contributes
 

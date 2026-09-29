@@ -9,12 +9,11 @@ date: 2026-09-05
 
 A sparse Mixture-of-Experts layer gives each token access to a larger pool of parameters while executing only a selected subset. That creates an attractive compute budget, but also a routing and scheduling problem. “Only a few experts are active” is not enough information to size a deployment.
 
-<figure className="article-illustration">
-  <a href="/images/articles/moe-top-two-routing.png" target="_blank" rel="noreferrer" aria-label="Open illustration at full size in a new tab">
-    <img src="/images/articles/moe-top-two-routing-800.webp" srcSet="/images/articles/moe-top-two-routing-480.webp 480w, /images/articles/moe-top-two-routing-800.webp 800w, /images/articles/moe-top-two-routing-1254.webp 1254w" sizes="(max-width: 639px) calc(100vw - 92px), (max-width: 767px) calc(100vw - 116px), 600px" alt="A router sends one token to experts E1 and E3, then combines their outputs. E2 and E4 are inactive for this token." width="1254" height="1254" loading="lazy" decoding="async" />
-  </a>
-  <figcaption>A top-2 routing example: only E1 and E3 compute for this token, and their outputs are combined using routing weights. Inactive experts still have model weights; other tokens may select them. <a href="/images/articles/moe-top-two-routing.png" target="_blank" rel="noreferrer">View full-size image (new tab)</a>. Illustration generated with GPT Image.</figcaption>
-</figure>
+<ArticleFigure
+  base="/images/articles/moe-top-two-routing"
+  alt="A router sends one token to experts E1 and E3, then combines their outputs. E2 and E4 are inactive for this token."
+  caption="A top-2 routing example: only E1 and E3 compute for this token, and their outputs are combined using routing weights. Inactive experts still have model weights; other tokens may select them."
+/>
 
 ## Follow one token through the layer
 
