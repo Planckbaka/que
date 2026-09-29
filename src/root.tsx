@@ -28,6 +28,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#C8281E" />
         <link rel="icon" type="image/svg+xml" href="/orion-mark.svg" />
+        <link rel="manifest" href="/site.webmanifest" />
         <link rel="preload" href={antonUrl} as="font" type="font/woff2" crossOrigin="anonymous" />
         <Meta />
         <Links />

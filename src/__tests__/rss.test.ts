@@ -29,6 +29,7 @@ describe("buildRssXml", () => {
     expect(xml).toContain('<rss version="2.0"');
     expect(xml).toContain(`<title>${site.title}</title>`);
     expect(xml).toContain(`<link>${site.url}</link>`);
+    expect(xml).toContain("<language>en-us</language>");
   });
 
   it("emits one item per post with link, guid and pubDate", () => {
@@ -37,6 +38,11 @@ describe("buildRssXml", () => {
     expect(xml).toContain(`<link>${site.url}/files/the-case-of-the-blazing-build</link>`);
     expect(xml).toContain('guid isPermaLink="true"');
     expect(xml).toContain(new Date("2026-08-21").toUTCString());
+  });
+
+  it("derives lastBuildDate from the newest post (posts arrive newest-first)", () => {
+    const xml = buildRssXml(posts, site);
+    expect(xml).toContain(`<lastBuildDate>${new Date("2026-08-21").toUTCString()}</lastBuildDate>`);
   });
 
   it("escapes XML-sensitive characters in text fields", () => {

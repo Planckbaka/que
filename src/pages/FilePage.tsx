@@ -35,6 +35,8 @@ export function meta({ params }: { params: { slug?: string } }): Array<Record<st
     { tagName: "link", rel: "canonical", href: `${site.url}/files/${article.slug}` },
     { property: "og:type", content: "article" },
     { property: "og:url", content: `${site.url}/files/${article.slug}` },
+    { property: "article:published_time", content: fm.date },
+    ...fm.tags.map((tag) => ({ property: "article:tag", content: tag })),
     ...socialMeta({
       title: fm.title,
       description: fm.summary,

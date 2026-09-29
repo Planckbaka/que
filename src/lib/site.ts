@@ -14,7 +14,8 @@ export const site = {
 } as const;
 
 // Shared OG/Twitter card meta for route `meta()` exports. Routes without a
-// dedicated card fall back to the site card (build/client/og/index.png).
+// dedicated card fall back to the site card (build/client/og/index.png, a
+// 1200×630 render by magpie-pipeline.ts).
 export function socialMeta(input: {
   title: string;
   description: string;
@@ -30,8 +31,12 @@ export function socialMeta(input: {
         ]
       : []),
     { property: "og:title", content: input.title },
+    { property: "og:site_name", content: site.title },
     { property: "og:description", content: input.description },
     { property: "og:image", content: image },
+    { property: "og:image:width", content: "1200" },
+    { property: "og:image:height", content: "630" },
+    { property: "og:image:alt", content: input.title },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: input.title },
     { name: "twitter:description", content: input.description },

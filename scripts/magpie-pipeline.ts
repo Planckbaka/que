@@ -1,4 +1,5 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { extname, resolve } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
@@ -35,10 +36,13 @@ async function loadFonts(): Promise<
     style: "normal";
   }[]
 > {
-  const read = (path: string) => readFile(resolve(process.cwd(), path));
+  // Resolve through the package instead of hardcoding node_modules layout —
+  // hoisting strategies (pnpm, future npm changes) move these directories.
+  const require = createRequire(import.meta.url);
+  const read = (specifier: string) => readFile(require.resolve(specifier));
   const [anton, courier] = await Promise.all([
-    read("node_modules/@fontsource/anton/files/anton-latin-400-normal.woff"),
-    read("node_modules/@fontsource/courier-prime/files/courier-prime-latin-400-normal.woff"),
+    read("@fontsource/anton/files/anton-latin-400-normal.woff"),
+    read("@fontsource/courier-prime/files/courier-prime-latin-400-normal.woff"),
   ]);
   return [
     { name: "Anton", data: anton, weight: 400, style: "normal" },

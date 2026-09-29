@@ -11,6 +11,9 @@ const CONTENT_DIR = resolve(process.cwd(), "content/files");
 
 describe("seed case files", () => {
   it("parses every seed through the build-side scanner, newest first", async () => {
+    // RELEASE GATE: adding article #11 means editing this expected order
+    // (newest first, ties alphabetical). The failure is intentional — it
+    // forces a conscious update of the pinned shelf.
     const articles = await scanArticles(CONTENT_DIR);
     expect(articles.map((a) => a.slug)).toEqual([
       "go-container-cpu-budgets",
