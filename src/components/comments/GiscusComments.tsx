@@ -43,13 +43,23 @@ export function GiscusComments({ config = site.comments }: { config?: GiscusConf
     return () => host.replaceChildren();
   }, [config]);
 
+  // World flips re-voice the theme, and so must a late-mounting frame:
+  // data-loading="lazy" swaps the script tag for the iframe when scrolled
+  // into view, possibly AFTER a flip — observe the host and sync on arrival.
   useEffect(() => {
-    if (!config) return;
-    const frame = hostRef.current?.querySelector("iframe.giscus-frame") as HTMLIFrameElement | null;
-    frame?.contentWindow?.postMessage(
-      { giscus: { setConfig: { theme: WORLD_THEME[world] } } },
-      "https://giscus.app",
-    );
+    const host = hostRef.current;
+    if (!config || !host) return;
+    const sync = () => {
+      const frame = host.querySelector("iframe.giscus-frame") as HTMLIFrameElement | null;
+      frame?.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme: WORLD_THEME[world] } } },
+        "https://giscus.app",
+      );
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(host, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, [world, config]);
 
   if (!config) {

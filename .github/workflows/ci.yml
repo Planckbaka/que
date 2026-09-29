@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      # Full production build; scripts/check-publication.ts runs inside and
+      # fails the job on draft leakage, missing anchors/canonical, missing
+      # image derivatives or OG cards, and RSS/sitemap/prerender count drift.
+      - run: npm run build
