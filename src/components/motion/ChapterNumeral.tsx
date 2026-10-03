@@ -1,6 +1,5 @@
 import { motion, useScroll, useTransform } from "motion/react";
-import { useEffect, useState } from "react";
-import { prefersReducedMotion } from "@/lib/motion";
+import { useLivePrefersReducedMotion } from "@/lib/motion-hooks";
 
 // Scrub Chapter Numerals (spec §5 #5): a monumental outlined numeral behind
 // the content, drifting gently against scroll. Positioning comes from the
@@ -10,14 +9,7 @@ export function ChapterNumeral({ numeral, className }: { numeral: string; classN
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [60, -60]);
   // 实时采样：挂载后才开启 reduce（或中途切换）也能立即静止
-  const [frozen, setFrozen] = useState(prefersReducedMotion());
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = () => setFrozen(media.matches);
-    onChange();
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, []);
+  const frozen = useLivePrefersReducedMotion();
 
   return (
     <motion.span

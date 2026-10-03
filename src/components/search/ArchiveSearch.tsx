@@ -123,7 +123,7 @@ export function ArchiveSearch() {
               <li key={result.url}>
                 <LinkUnderVeil
                   to={result.url}
-                  className="block border-2 border-line bg-card p-5 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-0.5"
+                  className="block border-2 border-line bg-card p-5 text-card-foreground shadow-print-sm transition-transform duration-[140ms] hover:-translate-y-0.5"
                 >
                   <p className="font-machine text-xs font-bold uppercase tracking-[0.22em]">
                     {result.meta.title ?? result.url}

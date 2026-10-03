@@ -68,10 +68,10 @@ Root provider tree (in `src/root.tsx`): `WorldProvider > SmoothScroll > VeilProv
 - `src/components/ui/` — shadcn-style primitives on Radix behavior; overrides live inside each component's cva variants, never ad-hoc classNames at call sites.
 - `src/components/magpie/` — thematic primitives (ChapterNumeral, ClueChip, Redacted, HalftoneImage, PaperGrain) + `silhouettes.tsx` filled-SVG motif library. Article illustrations use `ArticleFigure` (`src/components/mdx/`) — responsive WebP srcSet with the full-size PNG one click away; derivatives are generated manually via cwebp and enforced by `check-publication.ts`.
 - `src/components/motion/` — `motion/react` primitives: AnagramText (seeded deterministic scramble — SSG-safe), TypewriterText, MorphIn, PageFlutter, StaggerList, plus P0 foundation pieces:
-  - `SmoothScroll.tsx` — Lenis mount (`duration: 0.8`), exposes `useSmoothScroll(): Lenis | null`; skips entirely under prefers-reduced-motion; intercepts `a[href^="#"]` with `scrollTo(el, { offset: -72 })`.
+  - `SmoothScroll.tsx` — Lenis mount (`DURATIONS.settle`); skips entirely under prefers-reduced-motion; intercepts `a[href^="#"]` with `scrollTo(el, { offset: -scroll-margin-top })` and hands focus to the target; stands down to native behavior when no Lenis instance exists (reduced motion / switch window) so the skip link keeps working.
   - `Veil.tsx` — route-wipe transition: `VeilProvider` / `useVeil().travel(to)` / `LinkUnderVeil` / `VeilOverlay`; 550ms cover→navigate→reveal, ink `#17120c`, busy-guarded; `data-covering` attribute for tests.
-  - P1: `PressTape` (aria-label carries the accessible copy — an sr-only row once fought `w-max` and pushed the document 146px past the viewport), `CenterSeam`, `HorizontalRail`, `HalftoneReveal` (`src/components/magpie/`).
-  - P3: `ReadingFolio` (fixed bottom-left page counter, `role="progressbar"`) and `ChapterNumeral` (outlined scroll-parallax numeral; static under reduced motion).
+  - P1: `PressTape` (aria-label carries the accessible copy — an sr-only row once fought `w-max` and pushed the document 146px past the viewport), `CenterSeam`, `HorizontalRail`.
+  - P3: `ReadingFolio` (reading progress `role="progressbar"` — top strip on small viewports, bottom-left from xl) and `ChapterNumeral` (outlined scroll-parallax numeral; static under reduced motion).
 - Shared motion tokens and pure mappers (`railShift`, `clampPct`, `folioPage`, `romanNumeral`, `prefersReducedMotion` — SSR-safe, guards `typeof window`) stay in `src/lib/motion.ts`.
 
 ### Conventions

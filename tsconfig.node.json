@@ -25,6 +25,7 @@
   },
   "include": [
     "vite.config.ts",
+    "vite.devbuild.config.ts",
     "react-router.config.ts",
     "app/**/*.tsx",
     "app/**/*.ts",

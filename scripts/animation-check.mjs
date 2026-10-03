@@ -155,6 +155,21 @@ check(
   `${seam.before}% -> ${seam.after}%`,
 );
 
+// 5b. PageFlutter sheets drift inside the constrained footer zone
+const flutter = await page.evaluate(async () => {
+  const sheet = document.querySelector(".page-flutter-sheet");
+  if (!sheet) return { found: false };
+  const read = () => getComputedStyle(sheet).transform;
+  const before = read();
+  await new Promise((r) => setTimeout(r, 1200));
+  return { found: true, before, after: read() };
+});
+check(
+  "page flutter drifts",
+  flutter.found && flutter.before !== flutter.after,
+  `"${flutter.before?.slice(0, 24)}" -> "${flutter.after?.slice(0, 24)}"`,
+);
+
 // 6. World toggle flips html[data-world]
 const world = await page.evaluate(async () => {
   const sw = document.querySelector('[role="switch"]');

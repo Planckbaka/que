@@ -194,12 +194,9 @@ function WritingTracks() {
             className="flex items-center gap-4 font-machine text-[11px] uppercase tracking-[0.12em]"
           >
             Frontier notes first
-            <Switch
-              id="track-order"
-              checked={world === "black"}
-              onCheckedChange={toggle}
-              aria-label="Show frontier articles first"
-            />
+            {/* No aria-label: the bound <label> carries the accessible name,
+                keeping it identical to the visible text (WCAG 2.5.3). */}
+            <Switch id="track-order" checked={world === "black"} onCheckedChange={toggle} />
           </label>
         </div>
         <div className="grid gap-10 pt-10 md:grid-cols-2 md:gap-16">

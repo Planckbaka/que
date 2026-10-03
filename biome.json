@@ -43,6 +43,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/components/motion/HorizontalRail.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveTabindex": "off"
+          }
+        }
+      }
     }
   ],
   "files": {

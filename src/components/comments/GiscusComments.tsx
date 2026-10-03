@@ -75,7 +75,9 @@ export function GiscusComments({ config = site.comments }: { config?: GiscusConf
       <p className="mb-4 font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
         Marginalia · <span lang="zh">旁注</span>
       </p>
-      <div ref={hostRef} data-giscus-repo={config.repo} />
+      {/* min-h reserves the lazy iframe's first paint so its late arrival
+          (data-loading="lazy") cannot shift the layout below it. */}
+      <div ref={hostRef} data-giscus-repo={config.repo} className="min-h-48" />
     </section>
   );
 }

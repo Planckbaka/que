@@ -21,6 +21,9 @@ type ArticleFigureProps = {
 
 // Article illustration with the full-size PNG kept one click away: responsive
 // WebP srcSet inline, the ~2.7 MB PNG only loads on explicit request.
+// SKILL §7 carve-out: these are authored schematic figures with their own
+// responsive WebP pipeline — the "everything through HalftoneImage" law covers
+// atmosphere/photography, not technical diagrams that must stay crisp.
 export function ArticleFigure({
   base,
   alt,

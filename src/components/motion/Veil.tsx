@@ -80,11 +80,22 @@ export function VeilProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!pendingFocus.current) return;
     pendingFocus.current = false;
+    // inert 的 subtree 无法聚焦——揭开瞬间先解除，再移交焦点
+    const main = document.getElementById("main");
+    if (main) main.inert = false;
     const heading = document.querySelector<HTMLElement>("main h1");
     if (!heading || document.activeElement === heading) return;
     heading.setAttribute("tabindex", "-1");
     heading.focus();
   }, [location.pathname]);
+
+  // Cover 期间把 main 置为 inert：遮幅不透明，但底下的旧页面仍可聚焦/点击
+  // （焦点会落进看不见的内容、点击会穿透到陈旧链接）。reveal 由 covering
+  // 复位自然恢复；reduced-motion 路径从不 covering，全程可交互。
+  useEffect(() => {
+    const main = document.getElementById("main");
+    if (main) main.inert = covering;
+  }, [covering]);
 
   const state = useMemo(() => ({ covering, halfMs, travel }), [covering, halfMs, travel]);
 

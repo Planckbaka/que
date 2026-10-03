@@ -16,6 +16,10 @@ for (const file of textFiles) {
   for (const draft of articles.filter((article) => article.frontmatter.draft)) {
     assert(!text.includes(draft.slug), `Draft slug leaked into ${file}`);
     assert(!text.includes(draft.frontmatter.title), `Draft title leaked into ${file}`);
+    // A draft that leaks through any side door (search index, OG alt text)
+    // most likely carries its summary or kicker with it.
+    assert(!text.includes(draft.frontmatter.summary), `Draft summary leaked into ${file}`);
+    assert(!text.includes(draft.frontmatter.kicker), `Draft kicker leaked into ${file}`);
   }
 }
 

@@ -1,4 +1,5 @@
 import { ClueChip } from "@/components/magpie/ClueChip";
+import { Redacted } from "@/components/magpie/Redacted";
 import { LinkUnderVeil } from "@/components/motion/Veil";
 import { useWorld, type World } from "@/components/motion/WorldWipe";
 import { ArchiveSearch } from "@/components/search/ArchiveSearch";
@@ -34,7 +35,7 @@ function FileCard({ article }: { article: Article }) {
   return (
     <LinkUnderVeil
       to={`/files/${article.slug}`}
-      className="on-card block border-2 border-line bg-card p-6 md:p-8 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-1"
+      className="on-card block border-2 border-line bg-card p-6 md:p-8 text-card-foreground shadow-print-sm transition-transform duration-[140ms] hover:-translate-y-1"
     >
       <p className="font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
         {fm.kicker}
@@ -71,7 +72,10 @@ export default function FilesPage() {
         </h1>
         <p className="mt-4 max-w-[52ch] font-body text-lg text-muted-foreground">
           Notes on software and machine learning, collected in two reading paths. Find an article or
-          browse by subject below.
+          browse by subject below. {/* Archive-wall Easter egg (SKILL §7). */}
+          <Redacted title="Reveal the archivist's note">
+            One for sorrow, two for joy — the rest are sealed evidence.
+          </Redacted>
         </p>
         <div className="mt-8">
           <ArchiveSearch />

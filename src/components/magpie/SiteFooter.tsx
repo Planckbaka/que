@@ -21,8 +21,13 @@ export function SiteFooter() {
             A Python and Go backend engineer’s notebook on services, concurrency, and AI
             infrastructure.
           </p>
-          <p className="mt-5 font-machine text-[10px] uppercase tracking-[0.12em]">
-            © 2026 {site.author}
+          {/* suppressHydrationWarning: the prerendered year and a client
+              midnight-at-New-Year render can disagree by one year. */}
+          <p
+            suppressHydrationWarning
+            className="mt-5 font-machine text-[10px] uppercase tracking-[0.12em]"
+          >
+            © {new Date().getFullYear()} {site.author}
           </p>
         </div>
         <nav
@@ -36,10 +41,10 @@ export function SiteFooter() {
             About
           </LinkUnderVeil>
           <a href={site.github} className="py-2">
-            GitHub ↗
+            GitHub <span aria-hidden="true">↗</span>
           </a>
           <a href="/rss.xml" className="border-b border-paper py-2">
-            RSS Feed ↗
+            RSS Feed <span aria-hidden="true">↗</span>
           </a>
         </nav>
       </div>

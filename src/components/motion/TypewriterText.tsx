@@ -10,6 +10,10 @@ type TypewriterTextProps = {
   caret?: boolean;
 };
 
+// SKILL §5 sanctions typewriter as a steps(1) char-reveal. Its total runtime
+// (startDelay + speed × chars ≈ 2.4s for a 40-char line) is a documented
+// exemption from the ≤800ms entrance budget — the same class of exception as
+// ReadingFolio's scrub-driven progress: the reader watches the machine work.
 export function TypewriterText({
   text,
   className,

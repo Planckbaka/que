@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HorizontalRail } from "@/components/motion/HorizontalRail";
 import { railShift } from "@/lib/motion";
@@ -38,38 +38,41 @@ describe("HorizontalRail", () => {
 
   it("reduced-motion stub true: outer data-variant=native, track has no sticky", async () => {
     stubReducedMotion();
-    render(
+    const { container } = render(
       <HorizontalRail ariaLabel="rail-native">
         <span>plate-1</span>
         <span>plate-2</span>
       </HorizontalRail>,
     );
-    const outer = screen.getByLabelText("rail-native");
+    const outer = container.firstElementChild as HTMLElement;
     await waitFor(() => {
       expect(outer).toHaveAttribute("data-variant", "native");
     });
     expect(outer.querySelector(".sticky")).toBeNull();
+    // native 视口（语义 section）自带命名 region：键盘聚焦的滚动区可被辅助技术发现
+    const region = within(outer).getByRole("region", { name: "rail-native" });
+    expect(region).toHaveAttribute("tabindex", "0");
   });
 
   it("default stub false: outer data-variant=pinned with sticky pinning", () => {
-    render(
+    const { container } = render(
       <HorizontalRail ariaLabel="rail-pinned">
         <span>plate-1</span>
         <span>plate-2</span>
       </HorizontalRail>,
     );
-    const outer = screen.getByLabelText("rail-pinned");
+    const outer = container.firstElementChild as HTMLElement;
     expect(outer).toHaveAttribute("data-variant", "pinned");
     expect(outer.querySelector(".sticky")).not.toBeNull();
   });
 
   it("reserves vertical travel from the actual clipping width and updates on resize", () => {
-    render(
+    const { container } = render(
       <HorizontalRail ariaLabel="sized-rail">
         <span>plate</span>
       </HorizontalRail>,
     );
-    const outer = screen.getByLabelText("sized-rail");
+    const outer = container.firstElementChild as HTMLElement;
     const viewport = outer.firstElementChild as HTMLDivElement;
     const track = screen.getByTestId("rail-track");
     Object.defineProperty(track, "scrollWidth", { configurable: true, value: 1600 });
@@ -101,12 +104,12 @@ describe("HorizontalRail", () => {
       "matchMedia",
       vi.fn(() => media),
     );
-    render(
+    const { container } = render(
       <HorizontalRail ariaLabel="adaptive-rail">
         <span>plate</span>
       </HorizontalRail>,
     );
-    const outer = screen.getByLabelText("adaptive-rail");
+    const outer = container.firstElementChild as HTMLElement;
     const viewport = outer.firstElementChild as HTMLDivElement;
     Object.defineProperty(screen.getByTestId("rail-track"), "scrollWidth", { value: 1600 });
     Object.defineProperty(viewport, "clientWidth", { value: 800 });
@@ -120,7 +123,9 @@ describe("HorizontalRail", () => {
     });
     expect(outer).toHaveAttribute("data-variant", "native");
     expect(outer.style.height).toBe("");
-    expect(viewport).toHaveClass("overflow-x-auto");
-    expect(viewport).not.toHaveClass("sticky");
+    // 翻转替换了整个视口元素（div -> section），重新查询
+    const nativeViewport = outer.firstElementChild as HTMLElement;
+    expect(nativeViewport).toHaveClass("overflow-x-auto");
+    expect(nativeViewport).not.toHaveClass("sticky");
   });
 });

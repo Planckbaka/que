@@ -32,6 +32,16 @@ export function WorldProvider({ children }: { children: ReactNode }) {
   const [world, setWorld] = useState<World>("red");
   const [wiping, setWiping] = useState(false);
   const busy = useRef(false);
+  // 擦除的两段 setTimeout 记录在案：root provider 在生产中不卸载，
+  // 但测试/热重载路径下卸载时不能留下悬挂计时器。
+  const timers = useRef<Array<number>>([]);
+
+  useEffect(
+    () => () => {
+      for (const t of timers.current) window.clearTimeout(t);
+    },
+    [],
+  );
 
   useEffect(() => {
     document.documentElement.dataset.world = world;
@@ -46,13 +56,17 @@ export function WorldProvider({ children }: { children: ReactNode }) {
     if (busy.current) return;
     busy.current = true;
     setWiping(true);
-    window.setTimeout(() => {
-      setWorld((w) => (w === "red" ? "black" : "red"));
-    }, HALF_WIPE_MS);
-    window.setTimeout(() => {
-      setWiping(false);
-      busy.current = false;
-    }, HALF_WIPE_MS * 2);
+    timers.current.push(
+      window.setTimeout(() => {
+        setWorld((w) => (w === "red" ? "black" : "red"));
+      }, HALF_WIPE_MS),
+    );
+    timers.current.push(
+      window.setTimeout(() => {
+        setWiping(false);
+        busy.current = false;
+      }, HALF_WIPE_MS * 2),
+    );
   }, []);
 
   const value = useMemo(() => ({ world, toggle }), [world, toggle]);

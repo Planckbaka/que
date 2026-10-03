@@ -32,6 +32,8 @@ export function CenterSeam({ left, right }: SeamProps) {
         onKeyDown={(e) => {
           if (e.key === "ArrowLeft") setPct((p) => clampPct(p - 5));
           if (e.key === "ArrowRight") setPct((p) => clampPct(p + 5));
+          if (e.key === "Home") setPct(clampPct(0));
+          if (e.key === "End") setPct(clampPct(100));
         }}
         className="absolute inset-y-0 w-1.5 -translate-x-1/2 cursor-ew-resize bg-paper [touch-action:none]"
         style={{ left: `${pct}%` }}

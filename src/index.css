@@ -85,7 +85,7 @@
 }
 
 @utility shadow-print-lg {
-  box-shadow: 7px 7px 0 0 var(--color-ink);
+  box-shadow: 6px 6px 0 0 var(--color-ink);
 }
 
 @utility text-outline {

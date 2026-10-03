@@ -100,7 +100,13 @@ createServer(async (req, res) => {
     } else {
       await pipeline(createReadStream(found.file), res);
     }
-  } catch {
+  } catch (error) {
+    // Client aborts are the common case and stay silent; genuine IO failures
+    // (EACCES, vanished file mid-stream) must not vanish without a trace.
+    const code = (error as NodeJS.ErrnoException | null)?.code ?? "";
+    if (!code.startsWith("ERR_STREAM_PREMATURE") && code !== "ECONNRESET" && code !== "EPIPE") {
+      console.error(`[preview] stream failed for ${found.file}:`, error);
+    }
     res.destroy();
   }
 }).listen(PORT, () => console.log(`preview on http://localhost:${PORT}`));

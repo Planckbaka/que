@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Single source of truth for case-file frontmatter (spec §4.1). Both content
-// readers — the Node-side fs scanner and the client-side glob collection —
+// readers — the Node-side fs scanner and the client-side virtual-module reader —
 // validate through this schema, so a slug rule or field change happens once.
 // Keep this module client-safe: no node-only imports (reading-time's CJS entry
 // pulls node:stream/util and breaks `npm run dev` if bundled for the browser).

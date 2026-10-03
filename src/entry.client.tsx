@@ -25,4 +25,4 @@ async function hydrate() {
     });
   });
 }
-void hydrate().catch((error: unknown) => console.error("Unable to hydrate article", error));
+void hydrate().catch((error: unknown) => console.error("Unable to hydrate", error));

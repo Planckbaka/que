@@ -57,7 +57,11 @@ function WorldDemo() {
   const { world, toggle } = useWorld();
   return (
     <div className="flex items-center gap-6">
-      <Switch checked={world === "black"} onCheckedChange={toggle} aria-label="Toggle the world" />
+      <Switch
+        checked={world === "black"}
+        onCheckedChange={toggle}
+        aria-label="Toggle between the red and black worlds"
+      />
       <p className="font-machine text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
         Current world: {world} — red for engineering, black for algorithms
       </p>
