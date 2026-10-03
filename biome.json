@@ -33,6 +33,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/components/seo/JsonLd.tsx"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
+    }
+  ],
   "files": {
     "includes": [
       "**",

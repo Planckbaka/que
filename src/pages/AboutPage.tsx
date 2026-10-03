@@ -1,5 +1,6 @@
 import { Magpie } from "@/components/magpie/silhouettes";
 import { LinkUnderVeil } from "@/components/motion/Veil";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { site, socialMeta } from "@/lib/site";
 
 export function meta() {
@@ -12,9 +13,20 @@ export function meta() {
   ];
 }
 
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: site.author,
+  url: site.url,
+  sameAs: [site.github],
+  jobTitle: "Python & Go backend engineer",
+  knowsAbout: ["Go", "Python", "LLM systems"],
+};
+
 export default function AboutPage() {
   return (
     <div className="reading-paper min-h-svh">
+      <JsonLd data={personJsonLd} />
       <section className="mx-auto max-w-[76rem] px-6 py-14 md:px-10 md:py-20">
         <p className="font-machine text-xs font-bold uppercase tracking-[0.2em]">
           About / The author

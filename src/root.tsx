@@ -15,6 +15,7 @@ import "./index.css";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { VeilOverlay, VeilProvider } from "@/components/motion/Veil";
 import { WorldProvider } from "@/components/motion/WorldWipe";
+import { site } from "@/lib/site";
 
 // Default title only — every leaf route owns its own title/description meta so
 // the prerendered pages never emit duplicate description tags.
@@ -31,6 +32,14 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta name="theme-color" content="#C8281E" />
         <link rel="icon" type="image/svg+xml" href="/orion-mark.svg" />
         <link rel="manifest" href="/site.webmanifest" />
+        {/* RSS autodiscovery — feed readers and browsers surface the subscription
+            button only when the head advertises the feed. */}
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title={site.title}
+          href={`${site.url}/rss.xml`}
+        />
         <link rel="preload" href={antonUrl} as="font" type="font/woff2" crossOrigin="anonymous" />
         <Meta />
         <Links />

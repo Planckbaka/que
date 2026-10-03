@@ -21,15 +21,21 @@ export function socialMeta(input: {
   description: string;
   image?: string;
   path?: string;
+  ogType?: "website" | "article";
 }): Array<Record<string, string>> {
   const image = input.image ?? `${site.url}/og/index.png`;
   return [
     ...(input.path
       ? [
-          { tagName: "link", rel: "canonical", href: `${site.url}${input.path}` },
+          {
+            tagName: "link",
+            rel: "canonical",
+            href: `${site.url}${input.path}`,
+          },
           { property: "og:url", content: `${site.url}${input.path}` },
         ]
       : []),
+    { property: "og:type", content: input.ogType ?? "website" },
     { property: "og:title", content: input.title },
     { property: "og:site_name", content: site.title },
     { property: "og:description", content: input.description },

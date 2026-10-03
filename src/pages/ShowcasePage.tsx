@@ -3,6 +3,7 @@ import { Magpie, PenNib } from "@/components/magpie/silhouettes";
 import { PressTape } from "@/components/motion/PressTape";
 import { LinkUnderVeil } from "@/components/motion/Veil";
 import { useWorld } from "@/components/motion/WorldWipe";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Switch } from "@/components/ui/switch";
 import { publishedArticles } from "@/lib/content";
 import { site, socialMeta } from "@/lib/site";
@@ -11,9 +12,37 @@ export function meta() {
   return [
     { title: site.title },
     { name: "description", content: site.description },
-    ...socialMeta({ path: "/", title: site.title, description: site.description }),
+    ...socialMeta({
+      path: "/",
+      title: site.title,
+      description: site.description,
+    }),
   ];
 }
+
+// Site-level rich-result data: one Person node the whole graph can reference.
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": `${site.url}/#person`,
+      name: site.author,
+      url: site.url,
+      sameAs: [site.github],
+      jobTitle: "Python & Go backend engineer",
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${site.url}/#website`,
+      url: site.url,
+      name: site.title,
+      description: site.description,
+      inLanguage: "en",
+      publisher: { "@id": `${site.url}/#person` },
+    },
+  ],
+};
 
 function Hero() {
   return (
@@ -202,6 +231,7 @@ function WritingTracks() {
 export default function ShowcasePage() {
   return (
     <div id="top">
+      <JsonLd data={websiteJsonLd} />
       <PaperGrain />
       <Hero />
       <PressTape items={["PYTHON & GO", "BACKEND ENGINEERING", "LLM SYSTEMS & PAPER NOTES"]} />

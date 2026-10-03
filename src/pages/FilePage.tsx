@@ -3,6 +3,7 @@ import { GiscusComments } from "@/components/comments/GiscusComments";
 import { ArticleBody } from "@/components/mdx/ArticleBody";
 import { ChapterNumeral } from "@/components/motion/ChapterNumeral";
 import { ReadingFolio } from "@/components/motion/ReadingFolio";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getArticle, preloadArticle, publishedArticles } from "@/lib/content";
 import { romanNumeral } from "@/lib/motion";
 import { site, socialMeta } from "@/lib/site";
@@ -32,15 +33,21 @@ export function meta({ params }: { params: { slug?: string } }): Array<Record<st
   return [
     { title: `${fm.title} · ${site.title}` },
     { name: "description", content: fm.summary },
-    { tagName: "link", rel: "canonical", href: `${site.url}/files/${article.slug}` },
-    { property: "og:type", content: "article" },
+    {
+      tagName: "link",
+      rel: "canonical",
+      href: `${site.url}/files/${article.slug}`,
+    },
     { property: "og:url", content: `${site.url}/files/${article.slug}` },
     { property: "article:published_time", content: fm.date },
+    { property: "article:modified_time", content: fm.date },
+    { property: "article:author", content: site.github },
     ...fm.tags.map((tag) => ({ property: "article:tag", content: tag })),
     ...socialMeta({
       title: fm.title,
       description: fm.summary,
       image: `${site.url}/og/${article.slug}.png`,
+      ogType: "article",
     }),
   ];
 }
@@ -63,6 +70,26 @@ export default function FilePage() {
     return <NotFoundPage />;
   }
   const { frontmatter: fm, Component } = article;
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: fm.title,
+    description: fm.summary,
+    image: `${site.url}/og/${article.slug}.png`,
+    datePublished: fm.date,
+    dateModified: fm.date,
+    inLanguage: "en",
+    keywords: fm.tags.join(", "),
+    mainEntityOfPage: `${site.url}/files/${article.slug}`,
+    author: {
+      "@type": "Person",
+      name: site.author,
+      url: site.url,
+      sameAs: [site.github],
+      jobTitle: "Python & Go backend engineer",
+    },
+    publisher: { "@type": "Person", name: site.author },
+  };
   // Chapter numeral = position in the published shelf (monument budget: this
   // numeral is the one monumental element on the reading view).
   const ordinal = publishedArticles.findIndex((entry) => entry.slug === article.slug);
@@ -78,6 +105,7 @@ export default function FilePage() {
     .slice(0, 3);
   return (
     <div data-world={fm.world} className="relative min-h-svh bg-background text-foreground">
+      <JsonLd data={articleJsonLd} />
       <ChapterNumeral
         numeral={romanNumeral(ordinal + 1)}
         className="hidden md:block -top-8 right-0 text-[clamp(10rem,26vw,22rem)]"
