@@ -103,6 +103,37 @@ describe("SmoothScroll", () => {
     expect(mocks.ctor).not.toHaveBeenCalled();
   });
 
+  it("reduced-motion 下不劫持锚点：放行原生跳转（焦点原生移动）", () => {
+    reduce = true;
+    render(
+      <SmoothScroll>
+        <a href="#target">go</a>
+        <div id="target">destination</div>
+      </SmoothScroll>,
+    );
+    const link = screen.getByText("go");
+    const clickEvent = createEvent.click(link);
+    const preventDefaultSpy = vi.spyOn(clickEvent, "preventDefault");
+    fireEvent(link, clickEvent);
+    // skip link 的语义依赖原生行为移动焦点，因此绝不能 preventDefault
+    expect(preventDefaultSpy).not.toHaveBeenCalled();
+    expect(mocks.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("劫持跳转的同时把焦点交给目标元素（skip link 穿越语义）", () => {
+    render(
+      <SmoothScroll>
+        <a href="#target">go</a>
+        <div id="target">destination</div>
+      </SmoothScroll>,
+    );
+    const link = screen.getByText("go");
+    fireEvent.click(link);
+    const target = document.getElementById("target");
+    expect(document.activeElement).toBe(target);
+    expect(target?.getAttribute("tabindex")).toBe("-1");
+  });
+
   it("中途切换 reduce：实例立即销毁；切回后重建", () => {
     render(
       <SmoothScroll>

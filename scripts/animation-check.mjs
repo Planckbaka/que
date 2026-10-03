@@ -21,7 +21,7 @@ page.on("console", (msg) => {
 });
 page.on("pageerror", (err) => logError("pageerror", err.stack ?? String(err)));
 
-await page.goto(BASE + "/", { waitUntil: "networkidle" });
+await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
 await page.waitForTimeout(600);
 
 check(
@@ -87,7 +87,7 @@ check(
 );
 
 // 3. Typewriter types on the lab page (progresses between two samples)
-await page.goto(BASE + "/lab", { waitUntil: "networkidle" });
+await page.goto(`${BASE}/lab`, { waitUntil: "networkidle" });
 await page.waitForTimeout(1200);
 const typewriter = await page.evaluate(async () => {
   const findAnchor = () =>
@@ -171,7 +171,9 @@ check(
 );
 
 // 7. Reading folio advances on the article page + chapter numeral parallax
-await page.goto(BASE + "/files/the-case-of-the-vanishing-gradient", { waitUntil: "networkidle" });
+await page.goto(`${BASE}/files/the-case-of-the-vanishing-gradient`, {
+  waitUntil: "networkidle",
+});
 await page.waitForTimeout(600);
 const folio = await page.evaluate(async () => {
   const folioEl = document.querySelector('[role="progressbar"]');
@@ -183,7 +185,13 @@ const folio = await page.evaluate(async () => {
   const numBefore = readY();
   window.scrollTo(0, document.body.scrollHeight * 0.6);
   await new Promise((r) => setTimeout(r, 900));
-  return { found: true, before, after: readPage(), numBefore, numAfter: readY() };
+  return {
+    found: true,
+    before,
+    after: readPage(),
+    numBefore,
+    numAfter: readY(),
+  };
 });
 check(
   "reading folio advances with scroll",
@@ -197,7 +205,7 @@ check(
 );
 
 // 8. Veil travel navigates and reveals
-await page.goto(BASE + "/files", { waitUntil: "networkidle" });
+await page.goto(`${BASE}/files`, { waitUntil: "networkidle" });
 await page.waitForTimeout(500);
 const link = [
   ...(await page.evaluate(() =>
@@ -212,7 +220,9 @@ await page.evaluate(() => {
 });
 let veilUrl = "";
 try {
-  await page.waitForURL("**/files/the-case-of-the-blazing-build", { timeout: 8000 });
+  await page.waitForURL("**/files/the-case-of-the-blazing-build", {
+    timeout: 8000,
+  });
   veilUrl = new URL(page.url()).pathname;
   await page.waitForTimeout(800);
 } catch {
@@ -221,7 +231,7 @@ try {
 check(
   "veil-covered navigation lands",
   veilUrl === "/files/the-case-of-the-blazing-build",
-  veilUrl + ` linkPresent=${link}`,
+  `${veilUrl} linkPresent=${link}`,
 );
 
 // 9. Production search must load its index and return an actual article.
