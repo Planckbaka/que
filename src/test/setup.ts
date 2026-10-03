@@ -32,6 +32,34 @@ globalThis.matchMedia = ((query: string) => ({
   dispatchEvent: () => false,
 })) as unknown as typeof matchMedia;
 
+// Node ≥24 的 undici 对 RequestInit.signal 做品牌检查，而 vitest jsdom 环境
+// 把 globalThis.AbortController 换成了 jsdom 版本 —— react-router 的
+// createClientSideRequest 拿着 jsdom signal 去 new undici Request，导航在
+// 初始化阶段就死掉（loader 错误永远到不了 errorElement）。探测到失配时
+// 包装 Request：无 signal 构建（通过检查），再把外部 signal 以实例属性
+// 影子挂回。Node 22 / 未来修复版本上探测通过，包装完全惰性。
+try {
+  new Request("https://magpie.test/probe", {
+    signal: new AbortController().signal,
+  });
+} catch {
+  const UndiciRequest = globalThis.Request;
+  class SignalSafeRequest extends UndiciRequest {
+    constructor(input: RequestInfo | URL, init?: RequestInit) {
+      const { signal, ...rest } = init ?? {};
+      super(input, rest);
+      if (signal) {
+        Object.defineProperty(this, "signal", {
+          value: signal,
+          writable: true,
+          configurable: true,
+        });
+      }
+    }
+  }
+  globalThis.Request = SignalSafeRequest;
+}
+
 afterEach(() => {
   cleanup();
 });
