@@ -1,17 +1,22 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { beforeAll, describe, expect, it } from "vitest";
+import { VeilProvider } from "@/components/motion/Veil";
 import { WorldProvider } from "@/components/motion/WorldWipe";
-import { articles, getArticle, publishedArticles } from "@/lib/content";
+import { getArticle, publishedArticles } from "@/lib/content";
 import FilePage, { loader, meta } from "@/pages/FilePage";
 
 function renderAtSlug(slug: string) {
   return render(
     <MemoryRouter initialEntries={[`/files/${slug}`]}>
+      {/* Mirror the root provider tree: FilePage renders LinkUnderVeil
+          (related reading), which requires the veil context. */}
       <WorldProvider>
-        <Routes>
-          <Route path="/files/:slug" element={<FilePage />} />
-        </Routes>
+        <VeilProvider>
+          <Routes>
+            <Route path="/files/:slug" element={<FilePage />} />
+          </Routes>
+        </VeilProvider>
       </WorldProvider>
     </MemoryRouter>,
   );
@@ -19,14 +24,14 @@ function renderAtSlug(slug: string) {
 
 describe("content collection", () => {
   it("collects every case file with validated frontmatter", () => {
-    expect(articles).toHaveLength(9);
+    expect(publishedArticles).toHaveLength(9);
     const blazing = getArticle("the-case-of-the-blazing-build");
     expect(blazing?.frontmatter.world).toBe("red");
     expect(blazing?.readingTimeMinutes).toBeGreaterThanOrEqual(1);
   });
 
   it("orders articles newest first", () => {
-    const dates = articles.map((a) => a.frontmatter.date);
+    const dates = publishedArticles.map((a) => a.frontmatter.date);
     const sorted = [...dates].sort((a, b) => Date.parse(b) - Date.parse(a));
     expect(dates).toEqual(sorted);
   });

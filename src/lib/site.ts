@@ -13,6 +13,19 @@ export const site = {
   comments: undefined,
 } as const;
 
+// Canonical schema.org Person node, shared by every JSON-LD graph (home
+// WebSite publisher, about page, and each BlogPosting author slot) so search
+// engines see one consistent author entity. Rendered via <JsonLd/>.
+export function personNode() {
+  return {
+    "@type": "Person",
+    name: site.author,
+    url: site.url,
+    sameAs: [site.github],
+    jobTitle: "Python & Go backend engineer",
+  };
+}
+
 // Shared OG/Twitter card meta for route `meta()` exports. Routes without a
 // dedicated card fall back to the site card (build/client/og/index.png, a
 // 1200×630 render by magpie-pipeline.ts).

@@ -3,16 +3,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-none border-2 font-machine text-sm font-bold uppercase tracking-[0.18em] transition-all duration-150 ease-print disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-none border-2 font-machine text-sm font-bold uppercase tracking-[0.18em] transition-all duration-[140ms] ease-print disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
+        // --red (#C8281E), not --stamp/#E03A24: paper-on-red needs the deeper
+        // vermillion to hold 4.8:1 at body size (stamp-red is 3.9:1, large-only).
         stamp:
-          "border-ink bg-stamp text-paper shadow-print hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-print-lg active:translate-y-0.5 active:shadow-print-sm",
+          "border-ink bg-blood text-paper shadow-print hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-print-lg active:translate-y-0.5 active:shadow-print-sm",
         ink: "border-ink bg-ink text-paper shadow-print hover:-translate-y-0.5 hover:shadow-print-lg active:translate-y-0.5 active:shadow-print-sm",
         outline:
           "border-line bg-transparent text-foreground hover:bg-foreground/10 active:translate-y-0.5",
-        type: "h-auto border-0 p-0 tracking-[0.22em] underline decoration-2 underline-offset-4 hover:text-stamp",
+        type: "h-auto border-0 p-0 tracking-[0.22em] underline decoration-2 underline-offset-4 hover:text-blood",
       },
       size: {
         sm: "h-9 px-4 text-xs",

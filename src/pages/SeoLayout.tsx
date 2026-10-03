@@ -39,7 +39,7 @@ export function RouteErrorCard({ title, detail }: { title: string; detail: strin
     <section className="reading-paper flex min-h-svh items-center justify-center px-6 py-16">
       <meta name="robots" content="noindex" />
       <div className="max-w-xl border-2 border-ink p-8 shadow-print">
-        <p className="font-machine text-sm">Error / Orion Arch</p>
+        <p className="font-machine text-sm uppercase tracking-[0.14em]">Error / Orion Arch</p>
         <h1
           ref={headingRef}
           tabIndex={-1}
@@ -48,6 +48,8 @@ export function RouteErrorCard({ title, detail }: { title: string; detail: strin
           {title}
         </h1>
         <p className="mt-6 font-body text-xl">{detail}</p>
+        {/* Deliberately native Links: after an error a full navigation resets
+            the whole app state — a veil-covered SPA hop would carry it over. */}
         <div className="mt-8 flex flex-wrap gap-6 underline underline-offset-4">
           <Link to="/files">Browse articles →</Link>
           <Link to="/">Return home →</Link>

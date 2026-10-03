@@ -28,7 +28,6 @@ export const publishedArticles: Article[] = publicArticles.map((article) => {
     },
   };
 });
-export const articles = publishedArticles;
 
 export function getArticle(slug: string): Article | undefined {
   return publishedArticles.find((article) => article.slug === slug);

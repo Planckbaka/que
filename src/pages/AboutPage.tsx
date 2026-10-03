@@ -1,7 +1,7 @@
 import { Magpie } from "@/components/magpie/silhouettes";
 import { LinkUnderVeil } from "@/components/motion/Veil";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { site, socialMeta } from "@/lib/site";
+import { personNode, site, socialMeta } from "@/lib/site";
 
 export function meta() {
   const description =
@@ -15,11 +15,7 @@ export function meta() {
 
 const personJsonLd = {
   "@context": "https://schema.org",
-  "@type": "Person",
-  name: site.author,
-  url: site.url,
-  sameAs: [site.github],
-  jobTitle: "Python & Go backend engineer",
+  ...personNode(),
   knowsAbout: ["Go", "Python", "LLM systems"],
 };
 
@@ -52,13 +48,13 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-wrap gap-6 pt-4 font-machine text-xs font-bold uppercase tracking-[0.12em]">
               <LinkUnderVeil to="/files" className="border-b border-ink py-2">
-                Read the articles →
+                Read the articles <span aria-hidden="true">→</span>
               </LinkUnderVeil>
               <a href={site.github} className="border-b border-ink py-2">
-                Find me on GitHub ↗
+                Find me on GitHub <span aria-hidden="true">↗</span>
               </a>
               <a href="/rss.xml" className="border-b border-ink py-2">
-                Follow via RSS ↗
+                Follow via RSS <span aria-hidden="true">↗</span>
               </a>
             </div>
           </div>
@@ -91,7 +87,7 @@ export default function AboutPage() {
               to="/lab"
               className="mt-6 inline-block border-b border-ink py-2 font-machine text-xs font-bold uppercase tracking-[0.12em]"
             >
-              Explore the design lab →
+              Explore the design lab <span aria-hidden="true">→</span>
             </LinkUnderVeil>
           </aside>
         </div>

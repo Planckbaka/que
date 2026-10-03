@@ -26,5 +26,7 @@
   --line: #f3eee3;
   --surface: #221b14;
   --on-surface: var(--paper);
-  --redaction: #453a30;
+  /* Palette law §2: neutrals derive from ink/paper — no 4th hex. Warmed by a
+     whisper of paper so the bar reads as aged ink, not pure black. */
+  --redaction: color-mix(in srgb, var(--paper) 20%, var(--ink));
 }

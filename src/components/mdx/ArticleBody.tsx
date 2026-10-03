@@ -27,7 +27,9 @@ export function ArticleBody({ Component }: Pick<Article, "Component">) {
       {/* 条目来自正文渲染后的收集：没有 h2 时整块隐藏，no-JS 静态页不再出现空目录 */}
       {headings.length > 0 && (
         <details ref={tocRef} className="mb-8 border-y border-line py-3">
-          <summary className="cursor-pointer font-machine text-sm">On this page</summary>
+          <summary className="cursor-pointer font-machine text-sm uppercase tracking-[0.14em]">
+            On this page
+          </summary>
           <nav aria-label="Article contents">
             <ol>
               {headings.map(({ id, text }) => (
@@ -45,7 +47,7 @@ export function ArticleBody({ Component }: Pick<Article, "Component">) {
           </nav>
         </details>
       )}
-      <div ref={body}>
+      <div ref={body} className="article-body">
         <Component components={articleComponents} />
       </div>
     </>

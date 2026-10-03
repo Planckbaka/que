@@ -1,12 +1,13 @@
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import { GiscusComments } from "@/components/comments/GiscusComments";
 import { ArticleBody } from "@/components/mdx/ArticleBody";
 import { ChapterNumeral } from "@/components/motion/ChapterNumeral";
 import { ReadingFolio } from "@/components/motion/ReadingFolio";
+import { LinkUnderVeil } from "@/components/motion/Veil";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getArticle, preloadArticle, publishedArticles } from "@/lib/content";
 import { romanNumeral } from "@/lib/motion";
-import { site, socialMeta } from "@/lib/site";
+import { personNode, site, socialMeta } from "@/lib/site";
 import NotFoundPage, { meta as notFoundMeta } from "./NotFoundRedirect";
 import { RouteErrorCard } from "./SeoLayout";
 
@@ -81,13 +82,7 @@ export default function FilePage() {
     inLanguage: "en",
     keywords: fm.tags.join(", "),
     mainEntityOfPage: `${site.url}/files/${article.slug}`,
-    author: {
-      "@type": "Person",
-      name: site.author,
-      url: site.url,
-      sameAs: [site.github],
-      jobTitle: "Python & Go backend engineer",
-    },
+    author: personNode(),
     publisher: { "@type": "Person", name: site.author },
   };
   // Chapter numeral = position in the published shelf (monument budget: this
@@ -114,7 +109,7 @@ export default function FilePage() {
       <article className="relative z-10 mx-auto max-w-[76rem] px-6 py-16 md:px-10">
         <div
           data-pagefind-body
-          className="on-card case-file mx-auto max-w-[72ch] border-2 border-line bg-card p-5 text-card-foreground shadow-print-lg sm:p-8 md:p-14"
+          className="on-card case-file mx-auto max-w-[68ch] border-2 border-line bg-card p-5 text-card-foreground shadow-print-lg sm:p-8 md:p-14"
         >
           <p className="font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
             {fm.kicker}
@@ -138,7 +133,9 @@ export default function FilePage() {
               <ul>
                 {related.map(({ entry }) => (
                   <li key={entry.slug}>
-                    <Link to={`/files/${entry.slug}`}>{entry.frontmatter.title}</Link>
+                    <LinkUnderVeil to={`/files/${entry.slug}`}>
+                      {entry.frontmatter.title}
+                    </LinkUnderVeil>
                   </li>
                 ))}
               </ul>

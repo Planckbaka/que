@@ -128,7 +128,7 @@ export default function LabPage() {
         <section className="space-y-6">
           <Placard name="Halftone" note="css dot field · hover focuses 7px → 3px" />
           <div className="grid gap-8 md:grid-cols-2">
-            <HalftoneImage className="p-10">
+            <HalftoneImage className="p-10" interactive>
               <Magpie className="size-28" />
             </HalftoneImage>
             <div className="flex items-center font-machine text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -185,8 +185,16 @@ export default function LabPage() {
           </p>
         </section>
 
-        <footer className="border-t-2 border-line pt-8">
-          <PageFlutter className="float-right" />
+        <footer className="relative border-t-2 border-line pt-8">
+          {/* Constrained rain zone: PageFlutter resolves against the nearest
+              positioned ancestor, so without this bounds it would rain over
+              the whole page instead of garnishing the footer corner. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 w-1/3 md:w-1/4"
+          >
+            <PageFlutter />
+          </div>
           <p className="font-machine text-[10px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
             Design studies / Orion Arch
           </p>

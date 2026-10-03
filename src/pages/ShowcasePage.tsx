@@ -6,7 +6,7 @@ import { useWorld } from "@/components/motion/WorldWipe";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Switch } from "@/components/ui/switch";
 import { publishedArticles } from "@/lib/content";
-import { site, socialMeta } from "@/lib/site";
+import { personNode, site, socialMeta } from "@/lib/site";
 
 export function meta() {
   return [
@@ -25,12 +25,8 @@ const websiteJsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Person",
+      ...personNode(),
       "@id": `${site.url}/#person`,
-      name: site.author,
-      url: site.url,
-      sameAs: [site.github],
-      jobTitle: "Python & Go backend engineer",
     },
     {
       "@type": "WebSite",
@@ -243,7 +239,7 @@ export default function ShowcasePage() {
       >
         <div className="mx-auto max-w-[71rem]">
           <p className="font-machine text-xs font-bold uppercase tracking-[0.2em]">
-            A few places to begin
+            03 / Places to begin
           </p>
           <h2 id="start-heading" className="mt-3 font-display text-4xl uppercase md:text-6xl">
             Inside my notebook
@@ -288,10 +284,12 @@ export default function ShowcasePage() {
           </div>
         </div>
       </section>
-      <section className="reading-paper px-6 py-14 md:px-10 md:py-20">
+      {/* Closing beat inks the page back into the black world (§1 world
+          rhythm: red -> paper -> ink -> paper -> ink, flowing into the footer). */}
+      <section className="bg-ink px-6 py-14 text-paper md:px-10 md:py-20">
         <div className="mx-auto max-w-[71rem]">
           <p className="font-machine text-xs font-bold uppercase tracking-[0.2em]">
-            03 / A note from the author
+            04 / A note from the author
           </p>
           <div className="mt-6 grid gap-6 md:grid-cols-[1fr_1.2fr] md:gap-16">
             <h2 className="font-display text-4xl uppercase leading-tight md:text-5xl">
@@ -306,7 +304,7 @@ export default function ShowcasePage() {
               </p>
               <LinkUnderVeil
                 to="/about"
-                className="mt-6 inline-block border-b border-ink pb-1 font-machine text-xs font-bold uppercase tracking-[0.12em]"
+                className="mt-6 inline-block border-b border-paper pb-1 font-machine text-xs font-bold uppercase tracking-[0.12em]"
               >
                 More about me <span aria-hidden="true">→</span>
               </LinkUnderVeil>

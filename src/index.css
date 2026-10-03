@@ -9,7 +9,10 @@
   --color-popover: var(--surface);
   --color-popover-foreground: var(--on-surface);
   --color-primary: var(--accent);
-  --color-primary-foreground: var(--bg);
+  /* Paper text on primary: ink-primary (red world) = 16:1 AA body. Red-bright
+     primary (black world) measures 3.8:1 — palette law bans body copy on red,
+     so primary surfaces carry display/UI-size text only there. */
+  --color-primary-foreground: var(--paper);
   --color-secondary: var(--paper-dim);
   --color-secondary-foreground: var(--ink);
   --color-muted: color-mix(in srgb, var(--fg) 12%, transparent);
@@ -93,6 +96,17 @@
 @utility halftone {
   background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.3px);
   background-size: 7px 7px;
+  /* Base-state transition lets the focus state below animate both ways. */
+  transition: background-size 140ms var(--ease-print);
+}
+
+/* Focus state for interactive halftone fields (Lab placard): the dot tile
+   tightens 7px -> 3px with a proportionally smaller dot, like pulling a
+   print into register. Apply via `group-hover:halftone-focus` inside a
+   `group` container. */
+@utility halftone-focus {
+  background-image: radial-gradient(circle, currentColor 0.5px, transparent 0.6px);
+  background-size: 3px 3px;
 }
 
 @keyframes caret-blink {
@@ -161,7 +175,8 @@
   margin-right: 1.5ch;
   text-align: right;
   font-family: var(--font-machine);
-  opacity: 0.4;
+  /* 0.62 keeps the counter ≥4.5:1 against the pre background (was 0.4 ≈ 2.5:1). */
+  opacity: 0.62;
   user-select: none;
 }
 
@@ -225,6 +240,18 @@
 
 .case-file figure {
   margin-block: 1.75rem;
+}
+
+/* SKILL §3 signature: red Anton drop cap floating three lines on the case
+   file's opening paragraph. Direct-child scope keeps blockquotes/figures and
+   their inner paragraphs from growing accidental caps. */
+.article-body > p:first-of-type::first-letter {
+  float: left;
+  padding-right: 0.08em;
+  font-family: var(--font-display);
+  font-size: 3.3em;
+  line-height: 0.82;
+  color: var(--red);
 }
 
 .case-file .article-illustration img {
