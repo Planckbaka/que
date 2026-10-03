@@ -289,10 +289,12 @@ export default function ShowcasePage() {
             04 / A note from the author
           </p>
           <div className="mt-6 grid gap-6 md:grid-cols-[1fr_1.2fr] md:gap-16">
+            {/* Outlined echo of the hero's "Arch." — the closing beat answers
+                the opening one (SKILL §3 text-outline signature). */}
             <h2 className="font-display text-4xl uppercase leading-tight md:text-5xl">
               A place to
               <br />
-              think in public.
+              <span className="text-outline">think in public.</span>
             </h2>
             <div className="font-body text-xl leading-relaxed">
               <p>

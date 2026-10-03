@@ -43,7 +43,7 @@ export function SiteFooter() {
           <a href={site.github} className="py-2">
             GitHub <span aria-hidden="true">↗</span>
           </a>
-          <a href="/rss.xml" className="border-b border-paper py-2">
+          <a href="/rss.xml" className="py-2">
             RSS Feed <span aria-hidden="true">↗</span>
           </a>
         </nav>
