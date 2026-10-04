@@ -2,9 +2,11 @@
 // P1/T3 PressTape 回归（R1 后）：默认环境（setup.ts 存根 matches:false）下动画轨道内含
 // 两份字面量半区（无缝 -50% 回卷），判别断言限定 .press-tape-track 内每条文本 = 2 次；
 // 无障碍文案由容器 aria-label 承载一份（优化轮：sr-only 重复行与 w-max 冲突曾把文档
-// 撑出 536px 横向溢出，移除）。reduced-motion 存根命中或 items 为空 → 整条返回 null。
+// 撑出 536px 横向溢出，移除）。空 items 返回 null；reduced-motion 由 CSS 隐藏，保持水合结构一致。
 // stub 收尾统一 unstubAllGlobals 回到 setup 默认值。
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PressTape } from "@/components/motion/PressTape";
 
@@ -43,7 +45,12 @@ describe("PressTape", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("reduced-motion stub true: returns null, container empty", () => {
+  it("hydrates the same server markup when the client prefers reduced motion", async () => {
+    const tree = <PressTape items={["HOT OFF THE PRESS"]} />;
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(tree);
+    document.body.append(container);
+    const serverTape = container.firstElementChild;
     vi.stubGlobal(
       "matchMedia",
       vi.fn().mockImplementation((query: string) => ({
@@ -56,8 +63,18 @@ describe("PressTape", () => {
         dispatchEvent: vi.fn(),
       })),
     );
-    const { container } = render(<PressTape items={["HOT OFF THE PRESS"]} />);
-    expect(container.childElementCount).toBe(0);
-    expect(container.innerHTML).toBe("");
+    const onRecoverableError = vi.fn();
+    let root: ReturnType<typeof hydrateRoot> | undefined;
+    try {
+      await act(async () => {
+        root = hydrateRoot(container, tree, { onRecoverableError });
+      });
+      expect(serverTape).not.toBeNull();
+      expect(container.firstElementChild).toBe(serverTape);
+      expect(onRecoverableError).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root?.unmount());
+      container.remove();
+    }
   });
 });

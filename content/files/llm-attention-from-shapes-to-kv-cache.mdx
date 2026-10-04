@@ -1,0 +1,102 @@
+---
+title: Attention, From Tensor Shapes to KV Cache
+kicker: Frontier Notes · LLM Internals
+world: black
+tags: [llm, attention, transformers, inference]
+summary: "An executable attention walkthrough: Q/K/V shapes, causal masking, numerical stability, KV-cache sizing, and inference tradeoffs."
+date: 2026-09-05
+---
+
+Attention is easier to reason about as a sequence of tensor transformations than as a conversation between tokens. For a backend engineer, those transformations also explain why a longer prompt or a larger serving batch can consume so much memory.
+
+This note builds a small CPU reference implementation. It is intended for inspecting shapes and testing invariants, not benchmarking an inference engine.
+
+<ArticleFigure
+  base="/images/articles/attention-weighted-reading"
+  alt="A query scores three visible keys; their values contribute with different weights. Future positions are masked."
+  caption="One query compares visible keys and takes a weighted sum of their values. Arrow widths illustrate weights, not measured probabilities. Future positions cannot contribute. The dashed divider marks the visibility boundary, not a computation path."
+/>
+
+## The contract of one attention head
+
+For one sequence, let queries have shape `(L, Dk)`, keys `(S, Dk)`, and values `(S, Dv)`. Query positions number `L`; accessible source positions number `S`.
+
+```text
+Q:                [L, Dk]
+K transpose:      [Dk, S]
+Q @ K transpose:  [L, S]
+softmax weights:  [L, S]
+weights @ V:      [L, Dv]
+```
+
+Scale the scores by `1 / sqrt(Dk)`, mask forbidden positions, then normalize along the source axis. Each query receives its own distribution. The scaling controls score variance under the simplifying assumption of independent, zero-mean, unit-variance components; it does not guarantee a particular distribution for learned vectors. These are the core operations in [Attention Is All You Need, section 3.2](https://arxiv.org/html/1706.03762v7#S3.SS2).
+
+In a model, learned projections produce Q, K, and V. Queries and keys need not be identical, so a self-attention score matrix is not generally symmetric. Multiple heads perform separate projected computations before their outputs are combined.
+
+## A causal reference implementation
+
+The example below uses NumPy and float64 on the CPU. All three arrays are already-projected inputs. For full-sequence causal self-attention, row `i` can read columns up to `i`. Each row therefore retains at least one allowed position.
+
+```python
+import numpy as np
+
+
+def causal_attention(q, k, v):
+    q, k, v = [np.asarray(x, dtype=np.float64) for x in (q, k, v)]
+    if any(x.ndim != 2 for x in (q, k, v)):
+        raise ValueError("expected two-dimensional arrays")
+    length, width = q.shape
+    if length < 1 or width < 1 or k.shape != q.shape:
+        raise ValueError("full-sequence Q and K must share a nonempty shape")
+    if v.shape[0] != length or v.shape[1] < 1:
+        raise ValueError("V must have one nonempty row per token")
+    if not all(np.isfinite(x).all() for x in (q, k, v)):
+        raise ValueError("inputs must be finite")
+
+    scores = (q @ k.T) / np.sqrt(width)
+    allowed = np.tri(length, dtype=bool)
+    scores = np.where(allowed, scores, -np.inf)
+    weights = np.exp(scores - scores.max(axis=-1, keepdims=True))
+    weights /= weights.sum(axis=-1, keepdims=True)
+    return weights @ v, weights
+
+
+q = np.array([[1., 0.], [0., 1.], [1., 1.]])
+v = np.array([[10.], [20.], [30.]])
+out, weights = causal_attention(q, q, v)
+assert out.shape == (3, 1)
+np.testing.assert_allclose(weights.sum(axis=-1), 1.)
+np.testing.assert_allclose(np.triu(weights, k=1), 0.)
+np.testing.assert_allclose(out[0], v[0])
+print(np.round(out[:, 0], 3))
+```
+
+Subtracting the row maximum stabilizes exponentiation. A general mask with a completely blocked row needs an explicit policy: subtracting negative infinity from negative infinity produces an undefined value. This particular triangular mask avoids that case. The implementation is not intended for extreme values that overflow even float64 matrix multiplication.
+
+## Prefill and decoding have different shapes
+
+During prompt processing, a naive full-sequence implementation creates a score tensor proportional to the square of the sequence length. During cached decoding, a new query reads existing keys and values; it should not recompute every earlier projection.
+
+Do not reuse the triangular mask above blindly for incremental decoding. A one-row query at the end of a long cache may legitimately attend to every cached position. Its causal position is an offset in the sequence, not row zero of a newly allocated matrix.
+
+For a conventional cache, a useful storage estimate is:
+
+```text
+bytes = 2 × layers × batch × cached_tokens × kv_heads × head_dim × bytes_per_element
+```
+
+As a hypothetical example, 32 layers, 8 KV heads, head dimension 128, 8192 cached tokens, and two-byte elements require **1 GiB per sequence** for the K/V tensors alone. This excludes weights, temporary buffers, padding, allocator overhead, and serving metadata. Multiplying by the batch size makes the capacity consequence visible before a load test.
+
+## Three optimizations, three different effects
+
+**Grouped-query attention** shares fewer KV heads across more query heads. It reduces cache storage through the `kv_heads` term; it is an architectural choice, not an arbitrary serving flag for any existing model. See the [GQA paper](https://arxiv.org/abs/2305.13245).
+
+**FlashAttention** changes how exact attention is evaluated, using tiling to reduce expensive memory traffic and avoid materializing the entire attention matrix. It does not make dense full-sequence attention linear-time or remove the need for a decode cache. See [FlashAttention](https://arxiv.org/abs/2205.14135).
+
+**Shorter admitted context** changes the workload itself. For a service, token budgets and cache-aware admission can matter as much as kernel selection. Measure prefill latency, decode throughput, and memory occupancy separately instead of reporting one undifferentiated “tokens per second” number.
+
+## Attention is not a truth detector
+
+Normalized weights describe a computation, not confidence in factual correctness. Without dropout, each head's weighted sum is a convex combination of its value vectors. That property does not extend unchanged through output projections, residual paths, and subsequent layers, and it cannot locate the cause of a hallucination by itself.
+
+For a smaller numerical example, see [Attention Is a Witness](/files/one-for-sorrow-attention-is-a-witness). For the complementary computation inside an MoE layer, continue with [MoE Routing and Serving Costs](/files/llm-moe-routing-and-serving-costs).

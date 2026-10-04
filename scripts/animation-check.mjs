@@ -10,6 +10,10 @@ const check = (name, ok, detail = "") =>
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const consoleErrors = [];
+const requestedScripts = [];
+page.on("request", (request) => {
+  if (request.resourceType() === "script") requestedScripts.push(request.url());
+});
 const logError = (kind, text) =>
   consoleErrors.push(`[${page.url().replace(BASE, "")}] ${kind}: ${text}`);
 page.on("console", (msg) => {
@@ -17,8 +21,15 @@ page.on("console", (msg) => {
 });
 page.on("pageerror", (err) => logError("pageerror", err.stack ?? String(err)));
 
-await page.goto(BASE + "/", { waitUntil: "networkidle" });
+await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
 await page.waitForTimeout(600);
+
+check(
+  "home does not request article bodies",
+  !requestedScripts.some((url) =>
+    /assets\/(llm-|go-container|python-free|bounded-ai|the-case|one-for)/.test(url),
+  ),
+);
 
 // 0. Lenis mounted + page scrollable
 const lenis = await page.evaluate(() => ({
@@ -27,23 +38,13 @@ const lenis = await page.evaluate(() => ({
 }));
 check("lenis mount + page scrollable", lenis.scrollable, `lenis class: ${lenis.hasClass}`);
 
-// 1. AnagramText resolves (scrambled -> PYE HALL on the cover). Anchor on the
-// sr-only copy, read the live aria-hidden sibling.
-const anagram = await page.evaluate(async () => {
-  const anchor = [...document.querySelectorAll("span.sr-only")].find(
-    (n) => n.textContent === "PYE HALL",
-  );
-  if (!anchor) return { found: false };
-  const live = anchor.nextElementSibling;
-  if (!live) return { found: false };
-  const first = live.textContent;
-  await new Promise((r) => setTimeout(r, 2600));
-  return { found: true, first, settled: live.textContent };
-});
+// Author identity stays readable even before client-side animations load.
 check(
-  "anagram resolves to stable text",
-  anagram.found && anagram.settled === "PYE HALL",
-  `first="${anagram.first?.slice(0, 24)}" settled="${anagram.settled?.slice(0, 24)}"`,
+  "author identity is stable",
+  await page
+    .locator("h1")
+    .innerText()
+    .then((text) => /ORION.*ARCH/is.test(text)),
 );
 
 // 1b. Lenis wheel path: real-user scrolling advances smoothly (monotonic)
@@ -86,7 +87,7 @@ check(
 );
 
 // 3. Typewriter types on the lab page (progresses between two samples)
-await page.goto(BASE + "/lab", { waitUntil: "networkidle" });
+await page.goto(`${BASE}/lab`, { waitUntil: "networkidle" });
 await page.waitForTimeout(1200);
 const typewriter = await page.evaluate(async () => {
   const findAnchor = () =>
@@ -154,6 +155,21 @@ check(
   `${seam.before}% -> ${seam.after}%`,
 );
 
+// 5b. PageFlutter sheets drift inside the constrained footer zone
+const flutter = await page.evaluate(async () => {
+  const sheet = document.querySelector(".page-flutter-sheet");
+  if (!sheet) return { found: false };
+  const read = () => getComputedStyle(sheet).transform;
+  const before = read();
+  await new Promise((r) => setTimeout(r, 1200));
+  return { found: true, before, after: read() };
+});
+check(
+  "page flutter drifts",
+  flutter.found && flutter.before !== flutter.after,
+  `"${flutter.before?.slice(0, 24)}" -> "${flutter.after?.slice(0, 24)}"`,
+);
+
 // 6. World toggle flips html[data-world]
 const world = await page.evaluate(async () => {
   const sw = document.querySelector('[role="switch"]');
@@ -170,7 +186,9 @@ check(
 );
 
 // 7. Reading folio advances on the article page + chapter numeral parallax
-await page.goto(BASE + "/files/the-case-of-the-vanishing-gradient", { waitUntil: "networkidle" });
+await page.goto(`${BASE}/files/the-case-of-the-vanishing-gradient`, {
+  waitUntil: "networkidle",
+});
 await page.waitForTimeout(600);
 const folio = await page.evaluate(async () => {
   const folioEl = document.querySelector('[role="progressbar"]');
@@ -182,7 +200,13 @@ const folio = await page.evaluate(async () => {
   const numBefore = readY();
   window.scrollTo(0, document.body.scrollHeight * 0.6);
   await new Promise((r) => setTimeout(r, 900));
-  return { found: true, before, after: readPage(), numBefore, numAfter: readY() };
+  return {
+    found: true,
+    before,
+    after: readPage(),
+    numBefore,
+    numAfter: readY(),
+  };
 });
 check(
   "reading folio advances with scroll",
@@ -196,7 +220,7 @@ check(
 );
 
 // 8. Veil travel navigates and reveals
-await page.goto(BASE + "/files", { waitUntil: "networkidle" });
+await page.goto(`${BASE}/files`, { waitUntil: "networkidle" });
 await page.waitForTimeout(500);
 const link = [
   ...(await page.evaluate(() =>
@@ -211,7 +235,9 @@ await page.evaluate(() => {
 });
 let veilUrl = "";
 try {
-  await page.waitForURL("**/files/the-case-of-the-blazing-build", { timeout: 8000 });
+  await page.waitForURL("**/files/the-case-of-the-blazing-build", {
+    timeout: 8000,
+  });
   veilUrl = new URL(page.url()).pathname;
   await page.waitForTimeout(800);
 } catch {
@@ -220,18 +246,102 @@ try {
 check(
   "veil-covered navigation lands",
   veilUrl === "/files/the-case-of-the-blazing-build",
-  veilUrl + ` linkPresent=${link}`,
+  `${veilUrl} linkPresent=${link}`,
 );
 
-// 9. Search UI present on the archive wall (or politely degraded in dev)
-await page.goto(BASE + "/files", { waitUntil: "networkidle" });
-await page.waitForTimeout(900);
-const search = await page.evaluate(() => {
-  const input = document.querySelector('input[aria-label="Search the archive"]');
-  const notice = document.body.textContent?.includes("Index unavailable in this printing");
-  return { present: Boolean(input) || Boolean(notice) };
+// 9. Production search must load its index and return an actual article.
+await page.goto(`${BASE}/files`, { waitUntil: "networkidle" });
+const searchInput = page.getByRole("searchbox", { name: "Search the archive" });
+await searchInput.fill("gradient");
+const searchResult = page.locator("li a").filter({ hasText: "The Case of the Vanishing Gradient" });
+try {
+  await searchResult.first().waitFor({ state: "visible", timeout: 8000 });
+  check("archive search returns indexed article", true);
+} catch {
+  check(
+    "archive search returns indexed article",
+    false,
+    "No matching result from the production index",
+  );
+}
+
+// Responsive reading gate: long titles, navigation, and code must stay usable.
+for (const width of [320, 390, 768, 1024, 1440]) {
+  await page.setViewportSize({ width, height: 900 });
+  for (const path of [
+    "/",
+    "/files",
+    "/files/go-container-cpu-budgets",
+    "/files/python-free-threading-backend",
+    "/files/bounded-ai-backend-pipelines",
+    "/files/llm-attention-from-shapes-to-kv-cache",
+    "/files/llm-moe-routing-and-serving-costs",
+    "/files/llm-dspark-confidence-scheduled-decoding",
+  ]) {
+    await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+    const layout = await page.evaluate(() => {
+      const withinViewport = (element) => {
+        const box = element.getBoundingClientRect();
+        return box.left >= -1 && box.right <= innerWidth + 1;
+      };
+      const targets = [...document.querySelectorAll("h1, nav, .case-file, pre")];
+      const codeScrolls = [...document.querySelectorAll("pre")].every((pre) => {
+        if (pre.scrollWidth <= pre.clientWidth) return true;
+        pre.scrollLeft = 40;
+        const moved = pre.scrollLeft > 0;
+        pre.scrollLeft = 0;
+        return moved;
+      });
+      return (
+        document.documentElement.scrollWidth <= innerWidth &&
+        targets.every(withinViewport) &&
+        codeScrolls
+      );
+    });
+    check(`responsive ${width}px ${path}`, layout);
+  }
+}
+
+await page.goto(`${BASE}/files/llm-attention-from-shapes-to-kv-cache`, {
+  waitUntil: "networkidle",
 });
-check("archive search present or degraded", search.present);
+await page.locator("summary").filter({ hasText: "On this page" }).click();
+const contentsLink = page.getByRole("navigation", { name: "Article contents" }).locator("a").last();
+const expectedHash = await contentsLink.getAttribute("href");
+await contentsLink.click();
+await page.waitForTimeout(300);
+check("article contents updates a shareable anchor", new URL(page.url()).hash === expectedHash);
+const staticPage = await browser.newPage({ javaScriptEnabled: false });
+await staticPage.goto(`${BASE}/files/llm-attention-from-shapes-to-kv-cache`);
+check(
+  "article body is readable without JavaScript",
+  (await staticPage.locator("pre.shiki").count()) > 0,
+);
+await staticPage.close();
+const reducedPage = await browser.newPage({ reducedMotion: "reduce" });
+const reducedErrors = [];
+reducedPage.on("pageerror", (error) => reducedErrors.push(error.message));
+reducedPage.on("console", (message) => {
+  if (message.type() === "error") reducedErrors.push(message.text());
+});
+await reducedPage.goto(`${BASE}/lab`, { waitUntil: "networkidle" });
+const reducedStatic = await reducedPage
+  .locator(".motion-reveal")
+  .evaluateAll(
+    (elements) =>
+      elements.length > 0 &&
+      elements.every(
+        (element) =>
+          getComputedStyle(element).opacity === "1" &&
+          getComputedStyle(element).transform === "none",
+      ),
+  );
+check(
+  "reduced motion is static and hydrates cleanly",
+  reducedStatic && reducedErrors.length === 0,
+  reducedErrors.join(" | "),
+);
+await reducedPage.close();
 
 check("no console errors", consoleErrors.length === 0, consoleErrors.join(" | ").slice(0, 2400));
 

@@ -64,7 +64,7 @@ Signatures: oversized outlined chapter numeral behind headings (-webkit-text-str
 - 12-col grid, max-w-[76rem]; 8px vertical baseline.
 - **Center-line symmetry**: mirror compositions across a vertical 2px ink rule — the seam where both worlds meet (split heroes, dual personas, before/after).
 - **Macro↔wide rhythm**: dense hero → airy text; alternate intimacy and monumentality.
-- Page furniture on every view: running head, folio bottom-outer, 1px hairline rules @ 40%.
+- Page furniture on every view: running head + 1px hairline rules @ 40%. The folio (page counter) rides **reading views** (article, lab) — it is reading chrome, not global chrome.
 - `rounded-none` everywhere (`--radius: 0`). Radius banned except `rounded-full` dots/seals.
 
 ## 5. Motion System (`src/lib/motion.ts`, engine = Motion)
@@ -84,6 +84,7 @@ Reusable primitives (`src/components/motion/`):
 
 Scroll: parallax on monumental elements only (≤2 per view).
 Hard rules: interactions ≤240ms · entrances ≤800ms · prefers-reduced-motion kills transforms (opacity-only ≤160ms) · never animate hue/gradients.
+Sanctioned budget exemptions (documented in component headers): TypewriterText's char-reveal theatre and ReadingFolio's scrub-driven progress; AnagramText auto-clamps its per-letter beat so resolve always lands inside `settle`.
 
 ## 6. shadcn Customization Matrix
 
@@ -110,7 +111,7 @@ Custom primitives (`src/components/magpie/`): MagpieCounter (「one for sorrow�
 
 ## 7. Iconography & Imagery
 
-Filled silhouette SVGs only — no stroke icons for motifs, no raw photography (all images pass through HalftoneImage). Lucide allowed only at small sizes inside courier-meta contexts. Motif library: magpie, typewriter key, pen nib, staircase, manor facade split by center line, falling figure, fluttering page, magnifier. Plant one Easter egg per major view.
+Filled silhouette SVGs only — no stroke icons for motifs, no raw photography (atmosphere/imagery passes through HalftoneImage; authored schematic figures ride the ArticleFigure WebP pipeline and are exempt). Lucide allowed only at small sizes inside courier-meta contexts. Motif library: magpie, typewriter key, pen nib, staircase, manor facade split by center line, falling figure, fluttering page, magnifier. Plant one Easter egg per major view.
 
 ## 8. Do / Don't
 

@@ -32,6 +32,18 @@ export function WorldProvider({ children }: { children: ReactNode }) {
   const [world, setWorld] = useState<World>("red");
   const [wiping, setWiping] = useState(false);
   const busy = useRef(false);
+  // 擦除的两段 setTimeout 各占一个 ref（与 Veil 同一口径）：卸载时清理，
+  // 不留悬挂计时器，也不再让已触发的 id 在数组里无限堆积。
+  const worldTimer = useRef<number | undefined>(undefined);
+  const wipeTimer = useRef<number | undefined>(undefined);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(worldTimer.current);
+      window.clearTimeout(wipeTimer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     document.documentElement.dataset.world = world;
@@ -46,10 +58,10 @@ export function WorldProvider({ children }: { children: ReactNode }) {
     if (busy.current) return;
     busy.current = true;
     setWiping(true);
-    window.setTimeout(() => {
+    worldTimer.current = window.setTimeout(() => {
       setWorld((w) => (w === "red" ? "black" : "red"));
     }, HALF_WIPE_MS);
-    window.setTimeout(() => {
+    wipeTimer.current = window.setTimeout(() => {
       setWiping(false);
       busy.current = false;
     }, HALF_WIPE_MS * 2);

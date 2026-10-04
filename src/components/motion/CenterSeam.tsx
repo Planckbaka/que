@@ -20,6 +20,9 @@ export function CenterSeam({ left, right }: SeamProps) {
       <div
         role="separator"
         aria-valuenow={Math.round(pct)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuetext={`${Math.round(pct)}% to the red world`}
         tabIndex={0}
         aria-label="Drag to resize the two worlds"
         onPointerDown={(e) => e.currentTarget.setPointerCapture(e.pointerId)}
@@ -29,8 +32,10 @@ export function CenterSeam({ left, right }: SeamProps) {
         onKeyDown={(e) => {
           if (e.key === "ArrowLeft") setPct((p) => clampPct(p - 5));
           if (e.key === "ArrowRight") setPct((p) => clampPct(p + 5));
+          if (e.key === "Home") setPct(clampPct(0));
+          if (e.key === "End") setPct(clampPct(100));
         }}
-        className="absolute inset-y-0 w-1.5 -translate-x-1/2 cursor-ew-resize bg-paper"
+        className="absolute inset-y-0 w-1.5 -translate-x-1/2 cursor-ew-resize bg-paper [touch-action:none]"
         style={{ left: `${pct}%` }}
       />
     </div>

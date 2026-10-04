@@ -43,19 +43,29 @@ export function GiscusComments({ config = site.comments }: { config?: GiscusConf
     return () => host.replaceChildren();
   }, [config]);
 
+  // World flips re-voice the theme, and so must a late-mounting frame:
+  // data-loading="lazy" swaps the script tag for the iframe when scrolled
+  // into view, possibly AFTER a flip — observe the host and sync on arrival.
   useEffect(() => {
-    if (!config) return;
-    const frame = hostRef.current?.querySelector("iframe.giscus-frame") as HTMLIFrameElement | null;
-    frame?.contentWindow?.postMessage(
-      { giscus: { setConfig: { theme: WORLD_THEME[world] } } },
-      "https://giscus.app",
-    );
+    const host = hostRef.current;
+    if (!config || !host) return;
+    const sync = () => {
+      const frame = host.querySelector("iframe.giscus-frame") as HTMLIFrameElement | null;
+      frame?.contentWindow?.postMessage(
+        { giscus: { setConfig: { theme: WORLD_THEME[world] } } },
+        "https://giscus.app",
+      );
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(host, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, [world, config]);
 
   if (!config) {
     return (
       <p className="border-t-2 border-line pt-6 font-machine text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
-        Reader marginalia arrive in a later printing — the case file stays open.
+        Comments are not enabled yet. You can follow new articles via RSS.
       </p>
     );
   }
@@ -63,9 +73,11 @@ export function GiscusComments({ config = site.comments }: { config?: GiscusConf
   return (
     <section aria-label="Reader marginalia" className="border-t-2 border-line pt-6">
       <p className="mb-4 font-machine text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground">
-        Marginalia · 旁注
+        Marginalia · <span lang="zh">旁注</span>
       </p>
-      <div ref={hostRef} data-giscus-repo={config.repo} />
+      {/* min-h reserves the lazy iframe's first paint so its late arrival
+          (data-loading="lazy") cannot shift the layout below it. */}
+      <div ref={hostRef} data-giscus-repo={config.repo} className="min-h-48" />
     </section>
   );
 }

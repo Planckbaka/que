@@ -3,7 +3,7 @@ title: The Case of the Vanishing Gradient
 kicker: Algorithm Files · Case No. 017
 world: black
 tags: [deep-learning, optimization]
-summary: A detective story about a loss that refused to leave a trace. The chain rule testified; the sigmoid confessed; skip connections closed the case.
+summary: "How the chain rule and activation functions affect gradient flow, with notes on initialization and residual connections."
 date: 2026-07-14
 ---
 
@@ -70,7 +70,7 @@ The pattern repeated every layer like a signature. Whenever a quantity decays by
 
 ## The Accomplice
 
-The sigmoid alone could not have done it. It needed an accomplice: initialization that started half the neurons deep inside saturation, and a loss surface whose early gradients had nothing to grip. <Redacted title="Sealed until the verdict">Together they ensured the product of handoff factors never exceeded 1e-6, so layer one's update rounds to zero in float32</Redacted> — a murder by rounding error, committed in broad daylight.
+Initialization can make the problem worse by placing neurons deep inside saturation. <Redacted title="A numerical detail">A gradient of 1e-6 is still representable in float32. Whether an update changes a stored weight depends on the learning rate and the weight's magnitude, not on the gradient alone.</Redacted> Repeated small factors can severely weaken the learning signal, but an exact zero requires a separate numerical explanation.
 
 ## How the Case Was Closed
 

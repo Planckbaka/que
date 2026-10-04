@@ -35,6 +35,12 @@ export function buildRssXml(posts: RssPost[], site: RssSite): string {
     ].join("\n"),
   );
 
+  // Posts arrive newest-first (the scanner sorts on publish date); the newest
+  // date doubles as the channel's lastBuildDate.
+  const lastBuild = posts[0]?.date
+    ? new Date(posts[0].date).toUTCString()
+    : new Date().toUTCString();
+
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
@@ -42,6 +48,8 @@ export function buildRssXml(posts: RssPost[], site: RssSite): string {
     `    <title>${escapeXml(site.title)}</title>`,
     `    <link>${escapeXml(site.url)}</link>`,
     `    <description>${escapeXml(site.description)}</description>`,
+    "    <language>en-us</language>",
+    `    <lastBuildDate>${lastBuild}</lastBuildDate>`,
     `    <atom:link href="${escapeXml(`${site.url}/rss.xml`)}" rel="self" type="application/rss+xml" />`,
     ...items,
     "  </channel>",

@@ -1,0 +1,79 @@
+---
+title: DSpark and the Cost of Verifying a Guess
+kicker: Frontier Notes · LLM Paper Reading
+world: black
+tags: [llm, dspark, speculative-decoding, inference]
+summary: "Reading DSpark through a backend lens: semi-autoregressive drafting, confidence scheduling, and a small verification-budget experiment."
+date: 2026-09-05
+---
+
+A fast draft is useful only if checking it costs less than the progress it enables. This is the backend question I bring to **DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation**, by Xin Cheng and collaborators, published as [arXiv:2607.05147v1](https://arxiv.org/abs/2607.05147) on July 6, 2026.
+
+<ArticleFigure
+  base="/images/articles/dspark-verification-budget"
+  alt="Draft five candidate tokens, choose a three-token prefix using confidence and engine cost, then send that prefix to the target model for verification."
+  caption="Conceptual scheduling view, not the full DSpark algorithm: confidence and engine cost help choose a prefix to verify. The five word cards are illustrative candidates, not literal tokenizer output. Drafting costs have already been paid; confidence does not certify factual correctness or replace the acceptance procedure."
+/>
+
+## What the paper contributes
+
+DSpark combines a substantial parallel draft backbone with a small sequential head, allowing sampled tokens inside a draft block to influence later proposals. It also estimates conditional acceptance confidence and combines prefix-survival estimates with an engine-specific cost profile to schedule how much of a draft to verify.
+
+The authors report 60–85% higher per-user generation speed for V4-Flash against MTP-1 at matched aggregate throughput. This is their deployment result, not a measurement from this blog. The paper also notes an unrecovered cost: drafting a full block still consumes work when few proposals will be accepted. See [the architecture and deployment sections](https://arxiv.org/html/2607.05147v1).
+
+The important distinction is that confidence allocates verification work; it does not replace the target model's acceptance procedure or certify factual correctness. The paper discusses selection-bias concerns, so an arbitrary confidence filter should not be assumed to preserve the target distribution.
+
+## A separate budgeting exercise
+
+To make the scheduling tradeoff tangible, consider a simplified model of my own. It is not DSpark's scheduler, a neural drafter, or a speculative sampler. It assumes supplied conditional survival probabilities and enumerates a few possible prefix lengths for **one request**.
+
+If the probabilities are `[0.95, 0.8, 0.6, 0.3]`, reaching the second accepted position requires the first two positions to survive. Its probability is therefore `0.95 × 0.8 = 0.76`. Reaching later positions becomes progressively less likely. This uses conditional probabilities; it does not assume independent acceptance events.
+
+Under the toy assumption of one additional target-generated token per cycle, expected progress is one plus the sum of prefix-survival probabilities. Divide that expectation by an assumed cycle time to compare choices. All timing values below are invented units, not milliseconds measured on hardware.
+
+```python
+from math import isfinite
+
+
+def choose_prefix(confidence, cycle_cost):
+    if len(cycle_cost) != len(confidence) + 1:
+        raise ValueError("provide a cost for lengths zero through N")
+    if any(not isfinite(c) or not 0 <= c <= 1 for c in confidence):
+        raise ValueError("confidence values must be finite probabilities")
+    if any(not isfinite(t) or t <= 0 for t in cycle_cost):
+        raise ValueError("cycle costs must be finite and positive")
+
+    expected = [1.0]  # illustrative extra target token
+    survival = 1.0
+    for conditional in confidence:
+        survival *= conditional
+        expected.append(expected[-1] + survival)
+    scores = [tokens / cost for tokens, cost in zip(expected, cycle_cost)]
+    best = max(range(len(scores)), key=scores.__getitem__)
+    return best, scores
+
+
+confidence = [0.95, 0.8, 0.6, 0.3]
+light, _ = choose_prefix(confidence, [1.0, 1.05, 1.1, 1.15, 1.2])
+busy, _ = choose_prefix(confidence, [1.0, 1.3, 1.9, 2.7, 3.8])
+assert (light, busy) == (3, 1)
+print("selected lengths:", light, busy)
+```
+
+The same proposal quality produces different choices when the assumed cost curve changes. A fixed confidence cutoff cannot express every such tradeoff. Conversely, inaccurate cost estimates can make an adaptive policy worse than a conservative fixed one.
+
+Do not read this example as a proof of sampling correctness. It never samples target or draft distributions, performs rejection correction, or handles a shared batch. Choosing a prefix from information about future sampled tokens can introduce additional dependencies that this exercise does not analyze.
+
+## What I would measure in a service
+
+I would begin with four separate measurements: drafting time, verification time, accepted progress, and request-level latency. Then I would stratify them by prompt length, output length, request type, and concurrency. A single average acceptance rate is too coarse to explain which requests consume scarce verification capacity.
+
+A useful experiment would compare fixed and adaptive budgets on the same request stream, with identical target weights, sampling settings, hardware, and queue policy. Report completion rates and tail latency alongside throughput. Preserve unsuccessful and low-acceptance cases in the evaluation; excluding them would remove exactly the cases where speculation may lose its advantage.
+
+At an API boundary, I would also keep a fallback path to the ordinary decoder. That is a proposed operational safeguard, not a claim that this short Python exercise implements DSpark deployment. It needs a real integration and model-specific validation.
+
+## From paper reading to implementation
+
+The authors link [DeepSpec](https://github.com/deepseek-ai/DeepSpec), a training and evaluation codebase for speculative decoding. That is the appropriate starting point for inspecting the actual model and evaluation path; this article's arithmetic example is intentionally much smaller.
+
+For the memory side of serving, read [Attention and KV Cache](/files/llm-attention-from-shapes-to-kv-cache). For model-weight and routing costs, see [MoE Routing and Serving Costs](/files/llm-moe-routing-and-serving-costs). Together, these notes separate three budgets: sequence state, expert computation, and useful verification work.

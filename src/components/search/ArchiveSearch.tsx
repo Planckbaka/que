@@ -1,24 +1,17 @@
 import { type ReactNode, useEffect, useState } from "react";
+import { LinkUnderVeil } from "@/components/motion/Veil";
 import { Input } from "@/components/ui/input";
+import { loadPagefind, type PagefindApi, type PagefindResult } from "@/lib/pagefind";
 
-type PagefindResult = {
-  meta: { title?: string; url?: string };
-  excerpt: string;
-  url: string;
-};
+const SEARCH_DEBOUNCE_MS = 300;
 
-type PagefindApi = {
-  search(query: string): Promise<{ results: Array<{ data(): Promise<PagefindResult> }> }>;
-};
-
-// Pagefind excerpts are HTML-escaped text with <mark> highlights. Decode the
-// basic entities and split on the mark tags so React renders every text node —
+// Split actual <mark> highlights before decoding escaped text, so literal
+// tags in articles survive. React renders every text node —
 // no dangerouslySetInnerHTML, no XSS surface.
 function excerptNodes(html: string): ReactNode[] {
-  const decoded = html.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
   const nodes: ReactNode[] = [];
   let open = false;
-  for (const part of decoded.split(/(<\/?mark>)/g)) {
+  for (const part of html.split(/(<\/?mark>)/g)) {
     if (part === "<mark>") {
       open = true;
       continue;
@@ -27,7 +20,13 @@ function excerptNodes(html: string): ReactNode[] {
       open = false;
       continue;
     }
-    if (part) nodes.push(open ? <mark key={nodes.length}>{part}</mark> : part);
+    const text = part
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#39;", "'")
+      .replaceAll("&amp;", "&");
+    if (text) nodes.push(open ? <mark key={nodes.length}>{text}</mark> : text);
   }
   return nodes;
 }
@@ -38,26 +37,22 @@ function excerptNodes(html: string): ReactNode[] {
 // instead of breaking the wall.
 export function ArchiveSearch() {
   const [query, setQuery] = useState("");
+  const [debounced, setDebounced] = useState("");
   const [pagefind, setPagefind] = useState<PagefindApi | null>(null);
   const [available, setAvailable] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<PagefindResult[] | null>(null);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(query.trim()), SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
     let cancelled = false;
-    // @vite-ignore: the chunk lives at the deployed root, not in the module
-    // graph — the runtime resolves it against the page origin. Fetch first so
-    // dev servers (SPA-fallback HTML instead of the chunk) degrade silently
-    // instead of throwing module-MIME errors into the console.
-    const chunk = "/pagefind/pagefind.js";
-    fetch(chunk)
-      .then((res) => {
-        const type = res.headers.get("content-type") ?? "";
-        if (!res.ok || !type.includes("javascript")) throw new Error("no pagefind index");
-        return import(/* @vite-ignore */ chunk) as Promise<{ default?: PagefindApi }>;
-      })
-      .then((mod) => {
-        if (cancelled) return;
-        setPagefind(mod.default ?? (mod as unknown as PagefindApi));
+    loadPagefind()
+      .then((api) => {
+        if (!cancelled) setPagefind(api);
       })
       .catch(() => {
         if (!cancelled) setAvailable(false);
@@ -69,25 +64,42 @@ export function ArchiveSearch() {
 
   useEffect(() => {
     if (!pagefind) return;
-    const trimmed = query.trim();
-    if (trimmed.length < 2) {
+    if (debounced.length < 2) {
       setResults(null);
+      setSearching(false);
       return;
     }
     let cancelled = false;
-    pagefind.search(trimmed).then(async (response) => {
-      const data = await Promise.all(response.results.slice(0, 8).map((entry) => entry.data()));
-      if (!cancelled) setResults(data);
-    });
+    setSearching(true);
+    pagefind
+      .search(debounced)
+      .then(async (response) => {
+        // One unreadable entry (corrupt metadata, deploy swap) drops that
+        // result only — it must not disable search for the whole session.
+        const settled = await Promise.allSettled(
+          response.results.slice(0, 8).map((entry) => entry.data()),
+        );
+        if (cancelled) return;
+        setResults(settled.flatMap((entry) => (entry.status === "fulfilled" ? [entry.value] : [])));
+      })
+      .catch(() => {
+        // A transient .search() rejection (deploy swap mid-keystroke) clears
+        // results but keeps the feature alive — only a failed index LOAD
+        // (loadPagefind above) downgrades to the unavailable notice.
+        if (!cancelled) setResults(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSearching(false);
+      });
     return () => {
       cancelled = true;
     };
-  }, [pagefind, query]);
+  }, [pagefind, debounced]);
 
   if (!available) {
     return (
       <p className="font-machine text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
-        Index unavailable in this printing — browse the shelf below.
+        Search is temporarily unavailable — browse the articles below.
       </p>
     );
   }
@@ -98,34 +110,41 @@ export function ArchiveSearch() {
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search the files…"
+        placeholder="Search articles…"
         aria-label="Search the archive"
         className="max-w-md font-machine text-sm uppercase tracking-[0.14em]"
       />
-      {results && (
-        <ul className="mt-6 grid gap-4">
-          {results.map((result) => (
-            <li key={result.url}>
-              <a
-                href={result.url}
-                className="block border-2 border-line bg-card p-5 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-0.5"
-              >
-                <p className="font-machine text-xs font-bold uppercase tracking-[0.22em]">
-                  {result.meta.title ?? result.url}
-                </p>
-                <p className="mt-2 font-body text-base leading-relaxed [&_mark]:bg-primary/20">
-                  {excerptNodes(result.excerpt)}
-                </p>
-              </a>
-            </li>
-          ))}
-          {results.length === 0 && (
-            <li className="font-machine text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
-              Nothing in the files matches — the detective keeps looking.
-            </li>
-          )}
-        </ul>
-      )}
+      <div role="status" aria-live="polite">
+        {searching && (
+          <p className="mt-6 font-machine text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
+            Searching…
+          </p>
+        )}
+        {!searching && results && (
+          <ul className="mt-6 grid gap-4">
+            {results.map((result) => (
+              <li key={result.url}>
+                <LinkUnderVeil
+                  to={result.url}
+                  className="block border-2 border-line bg-card p-5 text-card-foreground shadow-print-sm transition-transform duration-[140ms] hover:-translate-y-0.5"
+                >
+                  <p className="font-machine text-xs font-bold uppercase tracking-[0.22em]">
+                    {result.meta.title ?? result.url}
+                  </p>
+                  <p className="mt-2 font-body text-base leading-relaxed [&_mark]:bg-primary/20">
+                    {excerptNodes(result.excerpt)}
+                  </p>
+                </LinkUnderVeil>
+              </li>
+            ))}
+            {results.length === 0 && (
+              <li className="font-machine text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
+                No articles found. Try another keyword.
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

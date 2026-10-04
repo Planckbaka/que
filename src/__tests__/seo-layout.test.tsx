@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, expect, it } from "vitest";
 import { VeilProvider } from "@/components/motion/Veil";
@@ -22,17 +22,19 @@ function renderLayoutAt(path: string) {
 describe("SeoLayout", () => {
   it("wraps the outlet with the running head", () => {
     renderLayoutAt("/");
-    expect(screen.getAllByText(/The Magpie Files/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Orion Arch/).length).toBeGreaterThan(0);
     expect(screen.getByText("cover body")).toBeTruthy();
   });
 
   it("carries the site footer with in-world navigation", () => {
     renderLayoutAt("/files");
     expect(screen.getByText("archive body")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Archive" }).getAttribute("href")).toBe("/files");
-    expect(screen.getByRole("link", { name: "Lab" }).getAttribute("href")).toBe("/lab");
-    expect(screen.getByRole("link", { name: "Colophon" }).getAttribute("href")).toBe("/about");
-    expect(screen.getByRole("link", { name: "Cover" }).getAttribute("href")).toBe("/");
+    const nav = within(screen.getByRole("navigation", { name: "Primary" }));
+    expect(nav.getByRole("link", { name: "Articles" })).toHaveAttribute("href", "/files");
+    expect(nav.getByRole("link", { name: "Articles" })).toHaveAttribute("aria-current", "page");
+    expect(nav.getByRole("link", { name: "Lab" })).toHaveAttribute("href", "/lab");
+    expect(nav.getByRole("link", { name: "About" })).toHaveAttribute("href", "/about");
+    expect(screen.getByRole("main")).toBeTruthy();
   });
 
   it("signs the footer as Orion Arch and links the feed", () => {

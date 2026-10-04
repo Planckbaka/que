@@ -1,0 +1,57 @@
+---
+title: Go Services Under a CPU Budget
+kicker: Engineering Notes · Go Runtime
+world: red
+tags: [go, containers, performance]
+summary: "Container-aware GOMAXPROCS, CPU throttling, and a practical experiment for understanding backend tail latency."
+date: 2026-09-05
+---
+
+A service can report modest average CPU usage and still deliver slow responses. A useful place to look is the difference between **parallelism** and **CPU bandwidth**. This note examines the container-aware defaults introduced in Go 1.25 and proposes a measurement procedure for a real service. It reports no production benchmark results.
+
+## Two limits with different clocks
+
+`GOMAXPROCS` limits how many threads can execute Go code simultaneously. It does not cap goroutine count or total operating-system threads. A container CPU quota instead budgets CPU time over a period. Imagine a hypothetical budget of 200 milliseconds of CPU time per 100 milliseconds of wall time. Four busy workers could consume that budget in roughly 50 milliseconds; spreading work across two workers consumes it more gradually. Actual scheduling and throttling depend on the kernel and workload.
+
+The Go team explains why this mismatch can harm tail latency in [Container-aware GOMAXPROCS](https://go.dev/blog/container-aware-gomaxprocs). This distinction matters most when a container sees many host CPUs but receives a much smaller CPU budget.
+
+## What changed, and what can override it
+
+Go 1.25 introduced Linux cgroup CPU-bandwidth awareness and periodic updates to the default. CPU requests are not used as the quota input. An explicit positive `runtime.GOMAXPROCS` call or the environment variable can disable automatic behavior. Compatibility settings and the module's Go version also matter; rebuilding an older module with a newer compiler is not sufficient evidence that every new default is active. See the [Go 1.25 release notes](https://go.dev/doc/go1.25).
+
+The full rule also accounts for logical CPUs and affinity. Fractional quota values are rounded up, and the runtime generally keeps a minimum of two unless the logical CPU or affinity count is smaller. Consult the [runtime API contract](https://pkg.go.dev/runtime#GOMAXPROCS) before predicting a specific value. “The limit is 0.5 CPUs, so Go must use one worker” is not a reliable assumption.
+
+## Observe before overriding
+
+Run this standard-library-only diagnostic inside the actual container. Calling `GOMAXPROCS(0)` reads the current value without changing it.
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "runtime"
+)
+
+func main() {
+    fmt.Printf("toolchain=%s logical_cpus=%d parallelism=%d\n",
+        runtime.Version(), runtime.NumCPU(), runtime.GOMAXPROCS(0))
+    fmt.Printf("GOMAXPROCS=%q GODEBUG=%q\n",
+        os.Getenv("GOMAXPROCS"), os.Getenv("GODEBUG"))
+}
+```
+
+On a development laptop, this tells you about the laptop. It does not reproduce Linux cgroup scheduling. In a deployed service, record the effective configuration alongside application metrics, and check initialization code for libraries that set parallelism explicitly.
+
+## An experiment worth running
+
+Keep the request mix, container limit, replica count, and load-generator configuration fixed. Compare the default with one deliberate override at a time. Warm connection pools and caches before sampling. Measure completed requests, errors, p50/p95/p99 latency, CPU throttling, and allocation or GC activity together.
+
+My proposed acceptance rule is deliberately stricter than “CPU fell”: a change should meet the latency objective at the intended load without hiding failures or moving the queue into another service. Compare several repeated runs rather than one favorable interval. Record the toolchain and module version so the result can be reproduced after an upgrade.
+
+For burst-heavy work, test short bursts separately from sustained load. For I/O-heavy handlers, investigate database connection limits before blaming the scheduler. For CPU-heavy handlers, reducing duplicate serialization or unnecessary allocation may be more valuable than another parallelism override.
+
+## The boundary remains the application
+
+Runtime defaults improve scheduling decisions; they do not decide how much work an HTTP endpoint should admit. Request deadlines, bounded background work, and overload responses remain application concerns. Treat `GOMAXPROCS` as one measured part of the service configuration, with a written reason for every override.

@@ -3,9 +3,12 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "dev": "react-router dev",
-    "build": "tsc -b && react-router build && pagefind --site build/client",
+    "build": "tsc -b && react-router build && pagefind --site build/client && node scripts/check-publication.ts",
     "preview": "node scripts/preview.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -20,7 +23,6 @@
     "@fontsource/crimson-pro": "^5.2.5",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
-    "@radix-ui/react-tabs": "^1.1.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lenis": "^1.3.26",
@@ -29,7 +31,6 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.18.2",
-    "reading-time": "^1.5.0",
     "tailwind-merge": "^3.3.1",
     "zod": "^4.5.2"
   },
@@ -50,12 +51,12 @@
     "jsdom": "^26.1.0",
     "pagefind": "^1.5.2",
     "playwright": "^1.62.1",
+    "reading-time": "^1.5.0",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^5.2.0",
     "satori": "^0.33.4",
     "shiki": "^4.4.3",
     "tailwindcss": "^4.1.11",
-    "tw-animate-css": "^1.3.6",
     "typescript": "~5.9.2",
     "vite": "^7.1.0",
     "vitest": "^3.2.4",

@@ -33,6 +33,28 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/components/seo/JsonLd.tsx"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/components/motion/HorizontalRail.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveTabindex": "off"
+          }
+        }
+      }
+    }
+  ],
   "files": {
     "includes": [
       "**",
@@ -41,6 +63,8 @@
       "!build",
       "!.react-router",
       "!.omc",
+      "!.mimosa",
+      "!.claude/settings.local.json",
       "!storybook-static"
     ]
   }

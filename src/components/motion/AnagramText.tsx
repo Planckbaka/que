@@ -1,5 +1,6 @@
 import { useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
+import { DURATIONS } from "@/lib/motion";
 
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ&#%?";
 
@@ -42,7 +43,21 @@ type AnagramTextProps = {
   beat?: number;
 };
 
-export function AnagramText({ text, className, delay = 350, beat = 110 }: AnagramTextProps) {
+// 入场预算（SKILL §5：entrances ≤ 800ms）：完成时刻 = delay + beat × 字符数。
+// 默认 delay 取 DURATIONS.beat，beat 自动钳制使长文本仍落在 DURATIONS.settle
+// 之内；短文本保留 110ms 的戏剧节拍上限。显式传 beat 的调用方自担预算责任。
+const MAX_BEAT_MS = 110;
+const SETTLE_MS = DURATIONS.settle * 1000;
+
+export function AnagramText({
+  text,
+  className,
+  delay = DURATIONS.beat * 1000,
+  beat,
+}: AnagramTextProps) {
+  const resolvedBeat =
+    beat ??
+    Math.max(1, Math.min(MAX_BEAT_MS, Math.floor((SETTLE_MS - delay) / Math.max(text.length, 1))));
   const reduced = useReducedMotion();
   // 水合契约：首帧恒为确定性乱序（与预渲染 HTML 一致）；reduced 用户由挂载 effect 置为明文。
   // 切勿在初始化器里按 reduced 分叉——服务端 reduced 恒为 falsy，会固化出与客户端不同的首帧。
@@ -55,19 +70,21 @@ export function AnagramText({ text, className, delay = 350, beat = 110 }: Anagra
     }
     setDisplay(seededScramble(text));
     const start = Date.now() + delay;
+    // tick 跟随节拍：beat 小于采样间隔时加密 tick，避免一 tick 跳两个字
+    const tick = Math.max(16, Math.min(55, resolvedBeat));
     const id = window.setInterval(() => {
       // Math.max 防负切片：延迟期内 tick 落在 start 之前，floor 为负会把 slice 变成"去尾"，
       // 造成「半解→回乱」的视觉怪象；钳制到 0 = 延迟期内保持完整乱序。
-      const resolved = Math.max(0, Math.floor((Date.now() - start) / beat));
+      const resolved = Math.max(0, Math.floor((Date.now() - start) / resolvedBeat));
       if (resolved >= text.length) {
         setDisplay(text);
         window.clearInterval(id);
         return;
       }
       setDisplay(text.slice(0, resolved) + seededScramble(text.slice(resolved)));
-    }, 55);
+    }, tick);
     return () => window.clearInterval(id);
-  }, [text, reduced, delay, beat]);
+  }, [text, reduced, delay, resolvedBeat]);
 
   return (
     <span className={className}>

@@ -1,0 +1,102 @@
+---
+title: MoE Routing and Serving Costs
+kicker: Frontier Notes · LLM Internals
+world: black
+tags: [llm, moe, routing, inference]
+summary: "How tokens select experts, why active parameters differ from resident memory, and what routing means for an inference service."
+date: 2026-09-05
+---
+
+A sparse Mixture-of-Experts layer gives each token access to a larger pool of parameters while executing only a selected subset. That creates an attractive compute budget, but also a routing and scheduling problem. “Only a few experts are active” is not enough information to size a deployment.
+
+<ArticleFigure
+  base="/images/articles/moe-top-two-routing"
+  alt="A router sends one token to experts E1 and E3, then combines their outputs. E2 and E4 are inactive for this token."
+  caption="A top-2 routing example: only E1 and E3 compute for this token, and their outputs are combined using routing weights. Inactive experts still have model weights; other tokens may select them."
+/>
+
+## Follow one token through the layer
+
+In a common Transformer design, an MoE block replaces selected feed-forward sublayers. A router scores experts for a token representation, selects a subset, dispatches the token to those experts, and combines their outputs. Attention still mixes information across token positions; the expert networks apply learned transformations to routed representations.
+
+The [Switch Transformer](https://arxiv.org/html/2101.03961v3) explores top-1 routing, capacity constraints, and balancing incentives. These are particular design choices, not a universal MoE contract. Other architectures select multiple experts or use different overflow behavior.
+
+## Inspect the tensor shapes
+
+Flatten batch and sequence dimensions into `N` tokens. Suppose the hidden width is `D`, the number of experts is `E`, and the router selects `k` experts.
+
+```text
+Token states X:       [N, D]
+Router matrix:        [D, E]
+Router logits:        [N, E]
+Selected expert IDs:  [N, k]
+Selected weights:     [N, k]
+Combined output:      [N, D]
+```
+
+In the following educational implementation, selected logits are normalized with a softmax over only the chosen experts. That convention must be checked against the architecture being studied; it is not a reproduction of Switch training. With `k=1`, this particular normalization always gives the selected expert weight one, so it would not provide a useful differentiable gate weight for training a top-1 router.
+
+## A sparse forward pass you can run
+
+This CPU NumPy example creates four small, randomly initialized ReLU experts. The loops make dispatch visible. It has no training, capacity overflow, distributed communication, or shared experts.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(7)
+n, d, e, hidden, top_k = 5, 6, 4, 8, 2
+x = rng.normal(size=(n, d))
+router = rng.normal(size=(d, e))
+w1 = rng.normal(size=(e, d, hidden))
+w2 = rng.normal(size=(e, hidden, d))
+
+logits = x @ router
+selected = np.argsort(-logits, axis=-1, kind="stable")[:, :top_k]
+chosen = np.take_along_axis(logits, selected, axis=-1)
+gates = np.exp(chosen - chosen.max(axis=-1, keepdims=True))
+gates /= gates.sum(axis=-1, keepdims=True)
+
+output = np.zeros_like(x)
+for expert in range(e):
+    token_ids, slots = np.where(selected == expert)
+    if token_ids.size == 0:
+        continue
+    values = np.maximum(x[token_ids] @ w1[expert], 0) @ w2[expert]
+    output[token_ids] += gates[token_ids, slots, None] * values
+
+# Dense reference: evaluate every expert, then select the same contributions.
+all_outputs = np.stack(
+    [np.maximum(x @ w1[j], 0) @ w2[j] for j in range(e)], axis=1
+)
+reference = (
+    all_outputs[np.arange(n)[:, None], selected] * gates[..., None]
+).sum(axis=1)
+np.testing.assert_allclose(output, reference)
+np.testing.assert_allclose(gates.sum(axis=1), 1.)
+assert output.shape == (n, d)
+print("assignments:", np.bincount(selected.ravel(), minlength=e))
+```
+
+This comparison checks dispatch and aggregation correctness. It is not a speed comparison: a Python loop over tiny matrices is unlike a fused expert kernel. NumPy uses host memory here; no tensor is placed on a GPU.
+
+## Parameter count is not a memory budget
+
+All four experts remain allocated in this example even when a token visits two. In a deployed model, the weights must be resident somewhere or fetched as needed. Splitting experts across devices introduces communication; offloading introduces transfers and scheduling decisions. Neither cost is captured by counting active parameters alone.
+
+For a sizing exercise, calculate expert weights, shared weights, KV cache, activation buffers, and runtime overhead separately. Then consider quantization, sharding, and the largest supported batch. Treat vendor-reported parameter counts as architecture descriptors rather than promised latency or memory measurements.
+
+## Routing imbalance becomes a service problem
+
+A batch can send disproportionate work to a few experts. The total number of assignments may be unchanged while the critical path grows. My suggested serving measurements are per-expert assignment counts, dispatch time, expert execution time, and the fraction of tokens affected by any capacity policy. Aggregate GPU utilization can hide a slow expert or an expensive transfer.
+
+Do not assume that an expert has a clean human label such as “Python expert.” Specialization is learned and needs evidence. The [DeepSeekMoE paper](https://arxiv.org/html/2401.06066v1) investigates finer-grained experts and shared-expert isolation to encourage specialization and reduce redundancy. Those mechanisms are separate from simply increasing the expert count.
+
+## Questions before choosing an MoE deployment
+
+- Does the target hardware hold the required weights and cache at the intended concurrency?
+- How much time goes into dispatch and communication rather than matrix multiplication?
+- What happens when expert demand is uneven or a device becomes unavailable?
+- Are throughput and latency measured on the intended prompt and output lengths?
+- Are accuracy, context limits, and quantization comparable to the dense alternative?
+
+MoE changes where computation happens and how parameters are used. The service still needs admission control, deadlines, and measurements under realistic load. Pair this note with [Attention and KV Cache](/files/llm-attention-from-shapes-to-kv-cache) to keep weight capacity and sequence-state capacity separate.

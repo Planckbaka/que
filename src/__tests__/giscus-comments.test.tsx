@@ -38,7 +38,7 @@ function Harness({ configured }: { configured?: boolean }) {
 describe("GiscusComments unconfigured (P4 default)", () => {
   it("prints the later-printing notice and injects nothing", () => {
     const { container } = render(<Harness />);
-    expect(screen.getByText(/arrive in a later printing/i)).toBeTruthy();
+    expect(screen.getByText(/Comments are not enabled/i)).toBeTruthy();
     expect(container.querySelector("script[src*='giscus']")).toBeNull();
   });
 });
@@ -86,5 +86,32 @@ describe("GiscusComments configured", () => {
       },
       { timeout: 6000 },
     );
+  });
+
+  it("syncs the theme when the lazy iframe arrives after a flip", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Harness configured />);
+    await waitFor(() => {
+      expect(container.querySelector("script[src*='giscus']")).toBeTruthy();
+    });
+    const postMessage = vi.fn();
+    // Flip to black BEFORE the iframe exists — the real giscus frame mounts
+    // lazily whenever it scrolls into view, and must not keep mount-time red.
+    await user.click(screen.getByRole("button", { name: /world is red/i }));
+    await waitFor(() => {
+      expect(document.documentElement.dataset.world).toBe("black");
+    });
+
+    const frame = document.createElement("iframe");
+    frame.className = "giscus-frame";
+    Object.defineProperty(frame, "contentWindow", { value: { postMessage } });
+    container.querySelector("[data-giscus-repo]")?.appendChild(frame);
+
+    await waitFor(() => {
+      expect(postMessage).toHaveBeenCalledWith(
+        { giscus: { setConfig: { theme: "noborder_dark" } } },
+        "https://giscus.app",
+      );
+    });
   });
 });

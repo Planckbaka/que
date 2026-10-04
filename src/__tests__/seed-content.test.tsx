@@ -11,8 +11,17 @@ const CONTENT_DIR = resolve(process.cwd(), "content/files");
 
 describe("seed case files", () => {
   it("parses every seed through the build-side scanner, newest first", async () => {
+    // RELEASE GATE: adding article #11 means editing this expected order
+    // (newest first, ties alphabetical). The failure is intentional — it
+    // forces a conscious update of the pinned shelf.
     const articles = await scanArticles(CONTENT_DIR);
     expect(articles.map((a) => a.slug)).toEqual([
+      "go-container-cpu-budgets",
+      "llm-attention-from-shapes-to-kv-cache",
+      "llm-dspark-confidence-scheduled-decoding",
+      "llm-moe-routing-and-serving-costs",
+      "python-free-threading-backend",
+      "bounded-ai-backend-pipelines",
       "sealed-testimony-of-the-overfitted-witness",
       "the-case-of-the-blazing-build",
       "one-for-sorrow-attention-is-a-witness",
@@ -51,6 +60,6 @@ describe("mdx pipeline", () => {
 
   it("resolves the mdx vocabulary inside article bodies", () => {
     const { container } = render(<GradientCase components={articleComponents} />);
-    expect(container.querySelectorAll("span[title]").length).toBeGreaterThan(0);
+    expect(container.querySelectorAll("button[aria-expanded]").length).toBeGreaterThan(0);
   });
 });

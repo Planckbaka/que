@@ -9,6 +9,9 @@ export default [
     route("files/:slug", "../src/pages/FilePage.tsx"),
     route("lab", "../src/pages/LabPage.tsx"),
     route("about", "../src/pages/AboutPage.tsx"),
+    // Inside the layout: the SPA-fallback 404 keeps the site chrome (main
+    // landmark, skip link, running head/footer) and the veil's `main h1`
+    // focus handoff, exactly like the boundary-rendered 404 path.
+    route("*", "../src/pages/NotFoundRedirect.tsx"),
   ]),
-  route("*", "../src/pages/NotFoundRedirect.tsx"),
 ] satisfies RouteConfig;

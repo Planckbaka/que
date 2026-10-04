@@ -1,4 +1,5 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { extname, resolve } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
@@ -35,10 +36,13 @@ async function loadFonts(): Promise<
     style: "normal";
   }[]
 > {
-  const read = (path: string) => readFile(resolve(process.cwd(), path));
+  // Resolve through the package instead of hardcoding node_modules layout —
+  // hoisting strategies (pnpm, future npm changes) move these directories.
+  const require = createRequire(import.meta.url);
+  const read = (specifier: string) => readFile(require.resolve(specifier));
   const [anton, courier] = await Promise.all([
-    read("node_modules/@fontsource/anton/files/anton-latin-400-normal.woff"),
-    read("node_modules/@fontsource/courier-prime/files/courier-prime-latin-400-normal.woff"),
+    read("@fontsource/anton/files/anton-latin-400-normal.woff"),
+    read("@fontsource/courier-prime/files/courier-prime-latin-400-normal.woff"),
   ]);
   return [
     { name: "Anton", data: anton, weight: 400, style: "normal" },
@@ -169,6 +173,86 @@ async function renderPng(node: SatoriNode, fonts: Awaited<ReturnType<typeof load
 
 // Build-time OG cards + RSS feed (spec §4.4). closeBundle writes into the
 // static output; the `written` flag guards the client/server double pass.
+async function writeDerivatives(): Promise<void> {
+  const articles = (await scanArticles(resolve(process.cwd(), "content/files"))).filter(
+    (article) => !article.frontmatter.draft,
+  );
+
+  const fonts = await loadFonts();
+  await mkdir(resolve(CLIENT_DIR, "og"), { recursive: true });
+
+  const cards = [
+    {
+      file: "og/index.png",
+      card: ogCard({
+        kicker: "Python · Go · AI infrastructure",
+        title: site.title,
+        world: "red",
+        numeral: "OA",
+      }),
+    },
+    ...articles.map((article, index) => ({
+      file: `og/${article.slug}.png`,
+      card: ogCard({
+        kicker: article.frontmatter.kicker,
+        title: article.frontmatter.title,
+        world: article.frontmatter.world,
+        numeral: String(index + 1).padStart(2, "0"),
+      }),
+    })),
+  ];
+  for (const { file, card } of cards) {
+    const png = await renderPng(card, fonts);
+    await writeFile(resolve(CLIENT_DIR, file), png);
+  }
+
+  const posts: RssPost[] = articles.map((article) => ({
+    slug: article.slug,
+    title: article.frontmatter.title,
+    summary: article.frontmatter.summary,
+    date: article.frontmatter.date,
+  }));
+  await writeFile(resolve(CLIENT_DIR, "rss.xml"), buildRssXml(posts, site), "utf8");
+
+  // Sitemap mirrors the prerender manifest one-to-one; article pages use
+  // their frontmatter date as lastmod, fixed routes the build day.
+  const buildDay = new Date().toISOString().slice(0, 10);
+  const sitemapEntries: SitemapEntry[] = [
+    { path: "/", lastmod: buildDay },
+    { path: "/files", lastmod: buildDay },
+    { path: "/lab", lastmod: buildDay },
+    { path: "/about", lastmod: buildDay },
+    ...articles.map((article) => ({
+      path: `/files/${article.slug}`,
+      lastmod: article.frontmatter.date,
+    })),
+  ];
+  await writeFile(
+    resolve(CLIENT_DIR, "sitemap.xml"),
+    buildSitemapXml(sitemapEntries, site),
+    "utf8",
+  );
+  await writeFile(resolve(CLIENT_DIR, "robots.txt"), buildRobotsTxt(site), "utf8");
+
+  // The framework emits a modulepreload link for every chunk in each
+  // prerendered route's graph. Thirteen high-priority preloads contend
+  // with the render-blocking CSS for the critical window and push FCP
+  // past 3s on slow connections (LH mobile: 85 → 92 without them). The
+  // inline route-import module re-discovers the same URLs right after
+  // first paint, and the Veil covers navigation latency, so nothing of
+  // value is lost — strip them from the static HTML.
+  const prerendered = await readdir(CLIENT_DIR, { recursive: true });
+  for (const entry of prerendered) {
+    if (extname(entry) !== ".html") continue;
+    const file = resolve(CLIENT_DIR, entry);
+    const html = await readFile(file, "utf8");
+    const stripped = stripModulePreloads(html);
+    if (stripped !== html) {
+      await writeFile(file, stripped, "utf8");
+    }
+  }
+}
+
 export function magpiePipeline(): Plugin {
   let written = false;
   return {
@@ -179,82 +263,14 @@ export function magpiePipeline(): Plugin {
       handler: async () => {
         if (written) return;
         written = true;
-        const articles = (await scanArticles(resolve(process.cwd(), "content/files"))).filter(
-          (article) => !article.frontmatter.draft,
-        );
-
-        const fonts = await loadFonts();
-        await mkdir(resolve(CLIENT_DIR, "og"), { recursive: true });
-
-        const cards = [
-          {
-            file: "og/index.png",
-            card: ogCard({
-              kicker: "Case Index · 1954-PYE",
-              title: site.title,
-              world: "red",
-              numeral: "1954",
-            }),
-          },
-          ...articles.map((article, index) => ({
-            file: `og/${article.slug}.png`,
-            card: ogCard({
-              kicker: article.frontmatter.kicker,
-              title: article.frontmatter.title,
-              world: article.frontmatter.world,
-              numeral: String(index + 1).padStart(2, "0"),
-            }),
-          })),
-        ];
-        for (const { file, card } of cards) {
-          const png = await renderPng(card, fonts);
-          await writeFile(resolve(CLIENT_DIR, file), png);
-        }
-
-        const posts: RssPost[] = articles.map((article) => ({
-          slug: article.slug,
-          title: article.frontmatter.title,
-          summary: article.frontmatter.summary,
-          date: article.frontmatter.date,
-        }));
-        await writeFile(resolve(CLIENT_DIR, "rss.xml"), buildRssXml(posts, site), "utf8");
-
-        // Sitemap mirrors the prerender manifest one-to-one; article pages use
-        // their frontmatter date as lastmod, fixed routes the build day.
-        const buildDay = new Date().toISOString().slice(0, 10);
-        const sitemapEntries: SitemapEntry[] = [
-          { path: "/", lastmod: buildDay },
-          { path: "/files", lastmod: buildDay },
-          { path: "/lab", lastmod: buildDay },
-          { path: "/about", lastmod: buildDay },
-          ...articles.map((article) => ({
-            path: `/files/${article.slug}`,
-            lastmod: article.frontmatter.date,
-          })),
-        ];
-        await writeFile(
-          resolve(CLIENT_DIR, "sitemap.xml"),
-          buildSitemapXml(sitemapEntries, site),
-          "utf8",
-        );
-        await writeFile(resolve(CLIENT_DIR, "robots.txt"), buildRobotsTxt(site), "utf8");
-
-        // The framework emits a modulepreload link for every chunk in each
-        // prerendered route's graph. Thirteen high-priority preloads contend
-        // with the render-blocking CSS for the critical window and push FCP
-        // past 3s on slow connections (LH mobile: 85 → 92 without them). The
-        // inline route-import module re-discovers the same URLs right after
-        // first paint, and the Veil covers navigation latency, so nothing of
-        // value is lost — strip them from the static HTML.
-        const prerendered = await readdir(CLIENT_DIR, { recursive: true });
-        for (const entry of prerendered) {
-          if (extname(entry) !== ".html") continue;
-          const file = resolve(CLIENT_DIR, entry);
-          const html = await readFile(file, "utf8");
-          const stripped = stripModulePreloads(html);
-          if (stripped !== html) {
-            await writeFile(file, stripped, "utf8");
-          }
+        // Vite may not propagate closeBundle throws to a failing exit code —
+        // catch, log with context, and fail the process explicitly so a broken
+        // OG/RSS/sitemap pipeline can never ship silently.
+        try {
+          await writeDerivatives();
+        } catch (error) {
+          console.error("[magpie-pipeline] derivative generation failed:", error);
+          process.exitCode = 1;
         }
       },
     },

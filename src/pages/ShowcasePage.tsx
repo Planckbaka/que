@@ -1,406 +1,220 @@
-import { motion } from "motion/react";
-import { ChapterHeading } from "@/components/magpie/ChapterHeading";
-import { ClueChip } from "@/components/magpie/ClueChip";
-import { HalftoneImage } from "@/components/magpie/HalftoneImage";
-import { MagpieCounter } from "@/components/magpie/MagpieCounter";
 import { PaperGrain } from "@/components/magpie/PaperGrain";
-import { Redacted } from "@/components/magpie/Redacted";
-import {
-  FallingFigure,
-  Magpie,
-  Manor,
-  PenNib,
-  Staircase,
-  Teacup,
-} from "@/components/magpie/silhouettes";
-import { AnagramText } from "@/components/motion/AnagramText";
-import { CenterSeam } from "@/components/motion/CenterSeam";
-import { HorizontalRail } from "@/components/motion/HorizontalRail";
-import { MorphIn } from "@/components/motion/MorphIn";
-import { PageFlutter } from "@/components/motion/PageFlutter";
+import { Magpie, PenNib } from "@/components/magpie/silhouettes";
 import { PressTape } from "@/components/motion/PressTape";
-import { StaggerList } from "@/components/motion/StaggerList";
-import { TypewriterText } from "@/components/motion/TypewriterText";
 import { LinkUnderVeil } from "@/components/motion/Veil";
 import { useWorld } from "@/components/motion/WorldWipe";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { publishedArticles } from "@/lib/content";
-import { site, socialMeta } from "@/lib/site";
+import { getArticle, publishedArticles } from "@/lib/content";
+import { personNode, site, socialMeta } from "@/lib/site";
 
 export function meta() {
   return [
-    { title: `${site.title} · 喜鹊档案` },
+    { title: site.title },
     { name: "description", content: site.description },
-    ...socialMeta({ title: site.title, description: site.description }),
+    ...socialMeta({
+      path: "/",
+      title: site.title,
+      description: site.description,
+    }),
   ];
 }
 
+// Site-level rich-result data: one Person node the whole graph can reference.
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      ...personNode(),
+      "@id": `${site.url}/#person`,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${site.url}/#website`,
+      url: site.url,
+      name: site.title,
+      description: site.description,
+      inLanguage: "en",
+      publisher: { "@id": `${site.url}/#person` },
+    },
+  ],
+};
+
 function Hero() {
   return (
-    <section className="relative flex min-h-[88svh] items-center overflow-hidden px-6 pt-14 pb-20 md:px-10">
-      <span
-        aria-hidden="true"
-        className="text-outline pointer-events-none absolute -top-8 -right-6 leading-none opacity-40 select-none [font-size:clamp(14rem,34vw,30rem)]"
-      >
-        I
-      </span>
-      <PageFlutter className="z-0" />
-      <div className="relative z-10 mx-auto grid w-full max-w-[76rem] items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+    <section className="relative overflow-hidden border-b-2 border-ink bg-background text-foreground">
+      <div className="mx-auto grid max-w-[76rem] gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] lg:gap-16">
         <div>
-          <p className="font-machine text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
-            Chapter One · One for Sorrow
+          <p className="font-machine text-xs font-bold uppercase tracking-[0.2em]">
+            The personal blog of {site.author}
           </p>
-          <h1 className="mt-4 font-display uppercase leading-[0.92]">
-            <span className="block text-[clamp(2.6rem,6vw,4.4rem)]">The Case of</span>
-            <span className="mt-3 inline-block bg-ink px-5 py-1 text-paper shadow-print-lg [font-size:clamp(3.2rem,9vw,7rem)] [[data-world='black']_&]:shadow-[7px_7px_0_0_var(--color-blood)]">
-              <AnagramText text="PYE HALL" />
-            </span>
+          <h1 className="mt-6 font-display text-[clamp(3.2rem,10vw,9rem)] uppercase leading-[0.92] tracking-tight">
+            <span className="block">Orion</span>
+            <span className="block text-outline">Arch.</span>
           </h1>
-          <p className="mt-7 max-w-md text-lg leading-relaxed text-paper">
-            A murder within the murder. The final chapter is missing, the author is dead, and every
-            magpie on the lawn is counting something.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center gap-5">
-            <Button size="lg" asChild>
-              <a href="#evidence">Open Case File</a>
-            </Button>
-            <Button variant="outline" size="lg" asChild>
-              <a href="#notes">Meet the Suspects</a>
-            </Button>
+          <div className="mt-8 max-w-[36rem] border-l-2 border-current pl-5">
+            <p className="font-body text-xl leading-relaxed md:text-2xl">
+              Python. Go. Reliable backends.
+              <br />
+              From APIs to AI infrastructure.
+            </p>
+          </div>
+          <div className="mt-8 flex flex-wrap gap-x-7 gap-y-4 font-machine text-xs font-bold uppercase tracking-[0.14em]">
+            <LinkUnderVeil
+              to="/files"
+              className="border-2 border-paper bg-paper px-5 py-4 text-ink shadow-print-sm transition-transform hover:-translate-y-1"
+            >
+              Read the articles <span aria-hidden="true">↗</span>
+            </LinkUnderVeil>
+            <LinkUnderVeil to="/about" className="self-center border-b border-current py-2">
+              About the author <span aria-hidden="true">→</span>
+            </LinkUnderVeil>
           </div>
         </div>
-        <motion.div
-          className="relative hidden justify-self-end lg:block"
-          animate={{ y: [0, -14, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <Magpie className="w-[min(30vw,380px)] text-primary" />
-          <Manor className="absolute -bottom-16 -left-24 w-44 text-paper opacity-90" />
-        </motion.div>
-      </div>
-      <p className="absolute bottom-5 left-6 font-machine text-[11px] uppercase tracking-[0.28em] text-paper md:left-10">
-        Folio 01 · Two Worlds, One Story
-      </p>
-    </section>
-  );
-}
-
-function WorldDivider() {
-  const { world, toggle } = useWorld();
-  return (
-    <section aria-label="World toggle" className="relative grid grid-cols-2 border-y-2 border-ink">
-      <div className="bg-blood p-8 text-paper md:p-12">
-        <p className="font-display text-xl uppercase tracking-wide md:text-2xl">Author World</p>
-        <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper">
-          Reality · Susan Ryeland
-        </p>
-      </div>
-      <div className="bg-ink p-8 text-right text-paper md:p-12">
-        <p className="font-display text-xl uppercase tracking-wide md:text-2xl">Detective World</p>
-        <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper">
-          Fiction · Atticus Pünd
-        </p>
-      </div>
-      <div
-        aria-hidden="true"
-        className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-paper"
-      />
-      <div className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-        <Switch
-          checked={world === "black"}
-          onCheckedChange={toggle}
-          aria-label="Flip between the author world and the detective world"
-        />
-        <p className="mt-2 inline-block bg-ink px-2 py-0.5 text-center font-machine text-[10px] font-bold uppercase tracking-[0.25em] text-paper">
-          Flip the world
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function RailDemo() {
-  return (
-    <HorizontalRail ariaLabel="Exhibit gallery">
-      {EXHIBITS.map((ex) => (
-        <figure
-          key={ex.badge}
-          className="on-card w-[70vw] shrink-0 border-2 border-line bg-card p-8 text-card-foreground shadow-print"
-        >
-          {ex.art}
-          <p className="mt-6 text-lg italic">{ex.title}</p>
-          <p className="mt-2 text-base italic text-muted-foreground">{ex.date}</p>
-          <figcaption className="mt-2 font-machine text-xs uppercase tracking-[0.25em]">
-            {ex.badge}
-          </figcaption>
-        </figure>
-      ))}
-    </HorizontalRail>
-  );
-}
-
-function SeamDemo() {
-  return (
-    <CenterSeam
-      left={
-        <div className="flex h-full flex-col justify-center p-8 md:p-12">
-          <p className="font-display text-xl uppercase tracking-wide md:text-2xl">Author World</p>
-          <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper">
-            Drag the seam, or use the arrow keys
-          </p>
-        </div>
-      }
-      right={
-        <div className="flex h-full flex-col items-end justify-center p-8 text-right md:p-12">
-          <p className="font-display text-xl uppercase tracking-wide md:text-2xl">
-            Detective World
-          </p>
-          <p className="mt-1 font-machine text-[11px] font-bold uppercase tracking-[0.22em] text-paper">
-            Two worlds, one fold
-          </p>
-        </div>
-      }
-    />
-  );
-}
-
-const EXHIBITS = [
-  {
-    badge: "Exhibit A-113",
-    title: "The Staircase",
-    date: "Found at Pye Hall, landing two",
-    art: <Staircase className="size-20" />,
-    secret: "She was pushed.",
-  },
-  {
-    badge: "Exhibit B-07",
-    title: "The Fountain Pen",
-    date: "Recovered from the study desk",
-    art: <PenNib className="size-20" />,
-    secret: "It writes more than novels.",
-  },
-  {
-    badge: "Exhibit C-02",
-    title: "Afternoon Tea",
-    date: "Still warm when they arrived",
-    art: <Teacup className="size-20" />,
-    secret: "Two cups. One guest.",
-  },
-];
-
-function EvidenceLocker() {
-  return (
-    <section
-      id="evidence"
-      data-world="black"
-      className="bg-background px-6 py-24 text-foreground md:px-10"
-    >
-      <div className="mx-auto max-w-[76rem]">
-        <MorphIn>
-          <ChapterHeading
-            numeral="II"
-            kicker="Evidence Locker · Pye Hall"
-            title="Twelve Objects, One Truth"
+        <div className="reading-paper relative flex flex-col justify-between border-2 border-ink bg-paper p-6 text-ink shadow-print-lg md:p-8">
+          <div className="flex justify-between border-b border-ink pb-4 font-machine text-[10px] font-bold uppercase tracking-[0.18em]">
+            <span>Python / Go</span>
+            <span>@orionarch26</span>
+          </div>
+          <div
+            aria-hidden="true"
+            className="relative my-6 flex min-h-36 items-center justify-center md:min-h-48"
           >
-            <p className="mt-5 max-w-2xl font-machine text-xs font-bold uppercase tracking-[0.25em] text-stamp">
-              <TypewriterText text="RETRIEVING RECORDS… 12 ITEMS FOUND" />
+            <span className="absolute inset-0 halftone text-ink opacity-10" />
+            <Magpie className="relative w-40 -rotate-12 md:w-56" />
+            <PenNib className="absolute right-0 bottom-0 size-14 text-blood" />
+          </div>
+          <div className="border-t border-ink pt-4">
+            <p className="font-display text-3xl uppercase">{site.author}</p>
+            <p className="mt-2 font-machine text-[11px] uppercase leading-relaxed tracking-[0.12em]">
+              Python &amp; Go backend engineer
             </p>
-          </ChapterHeading>
-        </MorphIn>
-        <MorphIn delay={0.15}>
-          <p className="mt-10 max-w-2xl text-lg leading-relaxed first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-6xl first-letter:leading-[0.8] first-letter:text-stamp">
-            Every object in this room passed through both worlds before it reached the evidence
-            shelf. Look closely and you will see where one story ends and the other begins — usually
-            along a clean vertical seam.
-          </p>
-        </MorphIn>
-        <StaggerList className="mt-14 grid gap-10 md:grid-cols-3">
-          {EXHIBITS.map((ex) => (
-            <Card key={ex.badge} variant="evidence" className="min-h-[24rem]">
-              <CardHeader>
-                <Badge variant="evidence">{ex.badge}</Badge>
-                <CardTitle className="mt-2">{ex.title}</CardTitle>
-                <CardDescription>{ex.date}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <HalftoneImage className="flex h-36 items-center justify-center">
-                  {ex.art}
-                </HalftoneImage>
-                <p className="mt-4 text-base italic">
-                  Note: <Redacted>{ex.secret}</Redacted>
-                </p>
-              </CardContent>
-              <CardFooter>
-                <Button variant="type" size="sm">
-                  Examine →
-                </Button>
-                <FallingFigure className="ml-auto size-8 opacity-60" />
-              </CardFooter>
-            </Card>
-          ))}
-        </StaggerList>
-      </div>
-    </section>
-  );
-}
-
-const SUSPECTS = [
-  { name: "Robert Conway", role: "The brother", status: "No alibi", cleared: false },
-  { name: "Melanie Bryant", role: "The agent", status: "No alibi", cleared: false },
-  { name: "John White", role: "The gardener", status: "Cleared", cleared: true },
-  { name: "Atticus Pünd", role: "The detective", status: "Never suspected", cleared: true },
-];
-
-function CaseNotes() {
-  return (
-    <section
-      id="notes"
-      data-world="red"
-      className="bg-background px-6 py-24 text-foreground md:px-10"
-    >
-      <div className="mx-auto max-w-4xl">
-        <MorphIn tilt={1}>
-          <ChapterHeading
-            numeral="III"
-            kicker="Case Notes · Everybody Lies"
-            title="Everybody Is Suspect"
-          />
-        </MorphIn>
-        <Tabs defaultValue="notes" className="mt-12">
-          <TabsList>
-            <TabsTrigger value="notes">Case Notes</TabsTrigger>
-            <TabsTrigger value="suspects">Suspects</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          </TabsList>
-          <TabsContent value="notes">
-            <p className="max-w-2xl text-lg leading-relaxed">
-              The author loved anagrams the way murderers love alibis. His detective's own name
-              hides another sentence entirely, which is either a clue or a very long joke at our
-              expense.
+            <p className="mt-4 font-body text-lg leading-relaxed">
+              I write to understand how systems work — from a goroutine to a model server.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <ClueChip>Anagram password</ClueChip>
-              <ClueChip>Missing chapter</ClueChip>
-              <ClueChip>Seven magpies</ClueChip>
-              <ClueChip>Red herring?</ClueChip>
-            </div>
-          </TabsContent>
-          <TabsContent value="suspects">
-            <ul>
-              {SUSPECTS.map((s) => (
-                <li
-                  key={s.name}
-                  className="flex items-baseline justify-between gap-4 border-b border-border py-3.5"
-                >
-                  <span className="text-lg">
-                    <span className="font-display mr-3 uppercase tracking-wide">{s.name}</span>
-                    <span className="italic opacity-80">{s.role}</span>
-                  </span>
-                  <Badge variant={s.cleared ? "ghost" : "stamp"}>{s.status}</Badge>
-                </li>
-              ))}
-            </ul>
-          </TabsContent>
-          <TabsContent value="timeline">
-            <dl className="font-machine text-xs font-bold uppercase tracking-[0.18em]">
-              {[
-                ["08:02", "Typewriter heard from the study"],
-                ["09:15", "Gardener finds the study door open"],
-                ["11:40", "Editor arrives with the manuscript"],
-                ["16:00", "Magpies counted on the lawn: seven"],
-              ].map(([time, event]) => (
-                <div
-                  key={time}
-                  className="flex justify-between gap-6 border-b border-border py-2.5"
-                >
-                  <dt className="text-primary">{time}</dt>
-                  <dd className="text-right">{event}</dd>
-                </div>
-              ))}
-            </dl>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </section>
-  );
-}
-
-function CounterSection() {
-  return (
-    <section data-world="black" className="bg-background px-6 py-24 text-foreground md:px-10">
-      <div className="mx-auto grid max-w-5xl items-center gap-16 md:grid-cols-2">
-        <MorphIn tilt={-1}>
-          <ChapterHeading
-            numeral="IV"
-            kicker="Field Guide · Nursery Rhyme"
-            title="Count the Magpies"
-          />
-          <MagpieCounter className="mt-10" />
-        </MorphIn>
-        <div>
-          <label
-            htmlFor="case-index"
-            className="font-machine text-xs font-bold uppercase tracking-[0.25em] text-muted-foreground"
-          >
-            Search the case index
-          </label>
-          <Input id="case-index" className="mt-3" placeholder="Type and press enter…" />
-          <p className="mt-2 font-machine text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-            Try: MAGPIE, PYE, SORROW
-          </p>
-          <p className="mt-10 max-w-sm text-lg italic leading-relaxed opacity-90">
-            And remember what the rhyme says about the seventh bird:{" "}
-            <Redacted>seven for a secret never told.</Redacted>
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ArchiveEntry() {
-  return (
-    <section data-world="red" className="border-t-2 border-ink bg-background px-6 py-16 md:px-10">
-      <div className="mx-auto max-w-[76rem]">
-        <p className="font-machine text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground">
-          From the Archive · 最新档案
-        </p>
-        <h2 className="mt-3 font-display text-4xl uppercase md:text-5xl">Recently Filed</h2>
-        <div className="mt-10 grid gap-8 md:grid-cols-3">
-          {publishedArticles.slice(0, 3).map((entry) => (
-            <LinkUnderVeil
-              key={entry.slug}
-              to={`/files/${entry.slug}`}
-              className="on-card block border-2 border-line bg-card p-6 text-card-foreground shadow-print-sm transition-transform duration-150 hover:-translate-y-1"
+            <a
+              href={site.github}
+              className="mt-5 inline-block border-b border-ink py-2 font-machine text-xs font-bold"
             >
-              <p className="font-machine text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
-                {entry.frontmatter.kicker}
-              </p>
-              <h3 className="mt-2 font-display text-2xl uppercase leading-none">
-                {entry.frontmatter.title}
-              </h3>
-              <p className="mt-4 font-machine text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                Filed {entry.frontmatter.date} · {entry.readingTimeMinutes} min read
+              GitHub / @orionarch26 ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LatestArticles() {
+  return (
+    <section
+      className="reading-paper px-6 py-14 md:px-10 md:py-20"
+      aria-labelledby="latest-heading"
+    >
+      <div className="mx-auto max-w-[71rem]">
+        <div className="flex flex-wrap items-end justify-between gap-5 border-b-2 border-ink pb-6">
+          <div>
+            <p className="font-machine text-xs font-bold uppercase tracking-[0.2em]">
+              01 / From the notebook
+            </p>
+            <h2 id="latest-heading" className="mt-3 font-display text-4xl uppercase md:text-6xl">
+              Latest writing
+            </h2>
+          </div>
+          <LinkUnderVeil
+            to="/files"
+            className="border-b border-ink pb-1 font-machine text-xs font-bold uppercase tracking-[0.12em]"
+          >
+            All articles <span aria-hidden="true">→</span>
+          </LinkUnderVeil>
+        </div>
+        <div>
+          {publishedArticles.slice(0, 3).map((article, index) => (
+            <LinkUnderVeil
+              key={article.slug}
+              to={`/files/${article.slug}`}
+              className="group grid min-w-0 gap-4 border-b border-ink/30 py-7 md:grid-cols-[3rem_1fr_10rem] md:gap-8 md:py-9"
+            >
+              <span aria-hidden="true" className="font-display text-3xl text-blood">
+                0{index + 1}
+              </span>
+              <div>
+                <p className="font-machine text-[10px] font-bold uppercase tracking-[0.16em]">
+                  {article.frontmatter.world === "red" ? "Engineering Notes" : "Frontier Notes"}
+                </p>
+                <h3 className="mt-2 font-display text-3xl uppercase leading-tight group-hover:underline decoration-2 underline-offset-4 md:text-4xl">
+                  {article.frontmatter.title}
+                </h3>
+                <p className="mt-3 max-w-[58ch] font-body text-lg leading-relaxed">
+                  {article.frontmatter.summary}
+                </p>
+              </div>
+              <p className="font-machine text-[11px] uppercase leading-loose tracking-[0.08em] md:text-right">
+                <time dateTime={article.frontmatter.date}>{article.frontmatter.date}</time>
+                <br />
+                {article.readingTimeMinutes} min read <span aria-hidden="true">↗</span>
               </p>
             </LinkUnderVeil>
           ))}
         </div>
-        <div className="mt-10">
-          <Button variant="type" size="sm" asChild>
-            <LinkUnderVeil to="/files">Open the archive</LinkUnderVeil>
-          </Button>
+      </div>
+    </section>
+  );
+}
+
+function WritingTracks() {
+  const { world, toggle } = useWorld();
+  const tracks = [
+    {
+      world: "red",
+      title: "Engineering Notes",
+      number: "I",
+      text: "Go, Python, and the systems around them. Notes on making software simpler to build, understand, and maintain.",
+    },
+    {
+      world: "black",
+      title: "Frontier Notes",
+      number: "II",
+      text: "AI infrastructure, evolving runtimes, and the algorithms behind modern services. Professional notes on what changes and why it matters.",
+    },
+  ];
+  if (world === "black") tracks.reverse();
+  return (
+    <section className="border-y-2 border-ink bg-ink text-paper" aria-labelledby="tracks-heading">
+      <div className="mx-auto max-w-[76rem] px-6 py-12 md:px-10 md:py-16">
+        <div className="flex flex-wrap items-center justify-between gap-6 border-b border-paper/30 pb-6">
+          <h2
+            id="tracks-heading"
+            className="font-machine text-xs font-bold uppercase tracking-[0.2em]"
+          >
+            02 / Two threads of curiosity
+          </h2>
+          <label
+            htmlFor="track-order"
+            className="flex items-center gap-4 font-machine text-[11px] uppercase tracking-[0.12em]"
+          >
+            Frontier notes first
+            {/* No aria-label: the bound <label> carries the accessible name,
+                keeping it identical to the visible text (WCAG 2.5.3). */}
+            <Switch id="track-order" checked={world === "black"} onCheckedChange={toggle} />
+          </label>
+        </div>
+        <div className="grid gap-10 pt-10 md:grid-cols-2 md:gap-16">
+          {tracks.map((track) => (
+            <div key={track.world}>
+              <p className="font-display text-5xl text-stamp" aria-hidden="true">
+                {track.number}
+              </p>
+              <h3 className="mt-4 font-display text-3xl uppercase md:text-4xl">{track.title}</h3>
+              <p className="mt-4 max-w-[42ch] font-body text-xl leading-relaxed">{track.text}</p>
+              <LinkUnderVeil
+                to={`/files#${track.world}`}
+                className="mt-6 inline-block border-b border-paper py-2 font-machine text-xs font-bold uppercase tracking-[0.12em]"
+              >
+                Browse this collection <span aria-hidden="true">→</span>
+              </LinkUnderVeil>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -409,19 +223,100 @@ function ArchiveEntry() {
 
 export default function ShowcasePage() {
   return (
-    <div id="top" className="min-h-svh">
+    <div id="top">
+      <JsonLd data={websiteJsonLd} />
       <PaperGrain />
-      <main>
-        <Hero />
-        <WorldDivider />
-        <PressTape items={["ONE FOR SORROW", "SEVEN FOR A SECRET", "CASE 1954-PYE REOPENED"]} />
-        <RailDemo />
-        <SeamDemo />
-        <EvidenceLocker />
-        <CaseNotes />
-        <CounterSection />
-        <ArchiveEntry />
-      </main>
+      <Hero />
+      <PressTape items={["PYTHON & GO", "BACKEND ENGINEERING", "LLM SYSTEMS & PAPER NOTES"]} />
+      <LatestArticles />
+      <WritingTracks />
+      <section
+        className="reading-paper border-b-2 border-ink px-6 py-14 md:px-10 md:py-20"
+        aria-labelledby="start-heading"
+      >
+        <div className="mx-auto max-w-[71rem]">
+          <p className="font-machine text-xs font-bold uppercase tracking-[0.2em]">
+            03 / Places to begin
+          </p>
+          <h2 id="start-heading" className="mt-3 font-display text-4xl uppercase md:text-6xl">
+            Inside my notebook
+          </h2>
+          <p className="mt-5 max-w-[55ch] font-body text-xl leading-relaxed">
+            I follow questions across code, experiments, and papers. Pick a thread that interests
+            you.
+          </p>
+          {/* Editorial copy with existence-checked links: a card whose slug
+              is renamed or unpublished simply disappears instead of 404-ing
+              from every prerendered copy of the home page. */}
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: "Building with Go",
+                detail:
+                  "What happens when a service has less CPU than it expects? Start with runtime budgets and latency.",
+                slug: "go-container-cpu-budgets",
+              },
+              {
+                title: "Thinking in Python",
+                detail:
+                  "What does removing the GIL change for a backend? Explore the assumptions before the benchmarks.",
+                slug: "python-free-threading-backend",
+              },
+              {
+                title: "Reading LLM papers",
+                detail:
+                  "From attention shapes to serving costs: connect the model's mechanics with engineering decisions.",
+                slug: "llm-attention-from-shapes-to-kv-cache",
+              },
+            ]
+              .map((item) => ({ ...item, article: getArticle(item.slug) }))
+              .filter((item) => item.article)
+              .map((item) => (
+                <LinkUnderVeil
+                  key={item.slug}
+                  to={`/files/${item.slug}`}
+                  className="min-w-0 border-2 border-ink p-6 shadow-print-sm hover:underline underline-offset-4"
+                >
+                  <h3 className="font-display text-3xl uppercase">{item.title}</h3>
+                  <p className="mt-4 font-body text-lg leading-relaxed">{item.detail}</p>
+                  <span className="mt-5 inline-block font-machine text-xs font-bold uppercase">
+                    Start reading →
+                  </span>
+                </LinkUnderVeil>
+              ))}
+          </div>
+        </div>
+      </section>
+      {/* Closing beat inks the page back into the black world (§1 world
+          rhythm: red -> paper -> ink -> paper -> ink, flowing into the footer). */}
+      <section className="bg-ink px-6 py-14 text-paper md:px-10 md:py-20">
+        <div className="mx-auto max-w-[71rem]">
+          <p className="font-machine text-xs font-bold uppercase tracking-[0.2em]">
+            04 / A note from the author
+          </p>
+          <div className="mt-6 grid gap-6 md:grid-cols-[1fr_1.2fr] md:gap-16">
+            {/* Outlined echo of the hero's "Arch." — the closing beat answers
+                the opening one (SKILL §3 text-outline signature). */}
+            <h2 className="font-display text-4xl uppercase leading-tight md:text-5xl">
+              A place to
+              <br />
+              <span className="text-outline">think in public.</span>
+            </h2>
+            <div className="font-body text-xl leading-relaxed">
+              <p>
+                I’m {site.author}. This is my notebook for Python and Go backend engineering: APIs,
+                concurrency, distributed systems, and the infrastructure behind AI applications.
+              </p>
+              <LinkUnderVeil
+                to="/about"
+                className="mt-6 inline-block border-b border-paper pb-1 font-machine text-xs font-bold uppercase tracking-[0.12em]"
+              >
+                More about me <span aria-hidden="true">→</span>
+              </LinkUnderVeil>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
