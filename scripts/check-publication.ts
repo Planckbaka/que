@@ -11,15 +11,23 @@ const articles = await scanArticles(resolve("content/files"));
 const published = articles.filter((article) => !article.frontmatter.draft);
 const files = await readdir(root, { recursive: true });
 const textFiles = files.filter((file) => /\.(js|html|xml|json)$/.test(file));
+// Slug presence anywhere is unambiguous (filenames are unique), so the slug
+// gate scans every text artifact. Title/summary/kicker are NOT unique — a
+// legitimate draft revision of a published article shares them with that
+// article's prerendered HTML — so those gates scan only artifacts that
+// enumerate articles in plaintext: the RSS feed. (Pagefind fragments are
+// compressed binaries; a substring check there proves nothing.)
+const feedText = await readFile(resolve(root, "rss.xml"), "utf8");
+for (const draft of articles.filter((article) => article.frontmatter.draft)) {
+  assert(!feedText.includes(draft.slug), "Draft slug leaked into rss.xml");
+  assert(!feedText.includes(draft.frontmatter.title), "Draft title leaked into rss.xml");
+  assert(!feedText.includes(draft.frontmatter.summary), "Draft summary leaked into rss.xml");
+  assert(!feedText.includes(draft.frontmatter.kicker), "Draft kicker leaked into rss.xml");
+}
 for (const file of textFiles) {
   const text = await readFile(resolve(root, file), "utf8");
   for (const draft of articles.filter((article) => article.frontmatter.draft)) {
     assert(!text.includes(draft.slug), `Draft slug leaked into ${file}`);
-    assert(!text.includes(draft.frontmatter.title), `Draft title leaked into ${file}`);
-    // A draft that leaks through any side door (search index, OG alt text)
-    // most likely carries its summary or kicker with it.
-    assert(!text.includes(draft.frontmatter.summary), `Draft summary leaked into ${file}`);
-    assert(!text.includes(draft.frontmatter.kicker), `Draft kicker leaked into ${file}`);
   }
 }
 

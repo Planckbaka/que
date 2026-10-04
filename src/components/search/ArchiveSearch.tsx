@@ -83,7 +83,10 @@ export function ArchiveSearch() {
         setResults(settled.flatMap((entry) => (entry.status === "fulfilled" ? [entry.value] : [])));
       })
       .catch(() => {
-        if (!cancelled) setAvailable(false);
+        // A transient .search() rejection (deploy swap mid-keystroke) clears
+        // results but keeps the feature alive — only a failed index LOAD
+        // (loadPagefind above) downgrades to the unavailable notice.
+        if (!cancelled) setResults(null);
       })
       .finally(() => {
         if (!cancelled) setSearching(false);

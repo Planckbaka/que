@@ -32,13 +32,15 @@ export function WorldProvider({ children }: { children: ReactNode }) {
   const [world, setWorld] = useState<World>("red");
   const [wiping, setWiping] = useState(false);
   const busy = useRef(false);
-  // 擦除的两段 setTimeout 记录在案：root provider 在生产中不卸载，
-  // 但测试/热重载路径下卸载时不能留下悬挂计时器。
-  const timers = useRef<Array<number>>([]);
+  // 擦除的两段 setTimeout 各占一个 ref（与 Veil 同一口径）：卸载时清理，
+  // 不留悬挂计时器，也不再让已触发的 id 在数组里无限堆积。
+  const worldTimer = useRef<number | undefined>(undefined);
+  const wipeTimer = useRef<number | undefined>(undefined);
 
   useEffect(
     () => () => {
-      for (const t of timers.current) window.clearTimeout(t);
+      window.clearTimeout(worldTimer.current);
+      window.clearTimeout(wipeTimer.current);
     },
     [],
   );
@@ -56,17 +58,13 @@ export function WorldProvider({ children }: { children: ReactNode }) {
     if (busy.current) return;
     busy.current = true;
     setWiping(true);
-    timers.current.push(
-      window.setTimeout(() => {
-        setWorld((w) => (w === "red" ? "black" : "red"));
-      }, HALF_WIPE_MS),
-    );
-    timers.current.push(
-      window.setTimeout(() => {
-        setWiping(false);
-        busy.current = false;
-      }, HALF_WIPE_MS * 2),
-    );
+    worldTimer.current = window.setTimeout(() => {
+      setWorld((w) => (w === "red" ? "black" : "red"));
+    }, HALF_WIPE_MS);
+    wipeTimer.current = window.setTimeout(() => {
+      setWiping(false);
+      busy.current = false;
+    }, HALF_WIPE_MS * 2);
   }, []);
 
   const value = useMemo(() => ({ world, toggle }), [world, toggle]);

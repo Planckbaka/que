@@ -5,7 +5,7 @@ import { LinkUnderVeil } from "@/components/motion/Veil";
 import { useWorld } from "@/components/motion/WorldWipe";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Switch } from "@/components/ui/switch";
-import { publishedArticles } from "@/lib/content";
+import { getArticle, publishedArticles } from "@/lib/content";
 import { personNode, site, socialMeta } from "@/lib/site";
 
 export function meta() {
@@ -245,6 +245,9 @@ export default function ShowcasePage() {
             I follow questions across code, experiments, and papers. Pick a thread that interests
             you.
           </p>
+          {/* Editorial copy with existence-checked links: a card whose slug
+              is renamed or unpublished simply disappears instead of 404-ing
+              from every prerendered copy of the home page. */}
           <div className="mt-8 grid gap-6 md:grid-cols-3">
             {[
               {
@@ -265,19 +268,22 @@ export default function ShowcasePage() {
                   "From attention shapes to serving costs: connect the model's mechanics with engineering decisions.",
                 slug: "llm-attention-from-shapes-to-kv-cache",
               },
-            ].map((item) => (
-              <LinkUnderVeil
-                key={item.slug}
-                to={`/files/${item.slug}`}
-                className="min-w-0 border-2 border-ink p-6 shadow-print-sm hover:underline underline-offset-4"
-              >
-                <h3 className="font-display text-3xl uppercase">{item.title}</h3>
-                <p className="mt-4 font-body text-lg leading-relaxed">{item.detail}</p>
-                <span className="mt-5 inline-block font-machine text-xs font-bold uppercase">
-                  Start reading →
-                </span>
-              </LinkUnderVeil>
-            ))}
+            ]
+              .map((item) => ({ ...item, article: getArticle(item.slug) }))
+              .filter((item) => item.article)
+              .map((item) => (
+                <LinkUnderVeil
+                  key={item.slug}
+                  to={`/files/${item.slug}`}
+                  className="min-w-0 border-2 border-ink p-6 shadow-print-sm hover:underline underline-offset-4"
+                >
+                  <h3 className="font-display text-3xl uppercase">{item.title}</h3>
+                  <p className="mt-4 font-body text-lg leading-relaxed">{item.detail}</p>
+                  <span className="mt-5 inline-block font-machine text-xs font-bold uppercase">
+                    Start reading →
+                  </span>
+                </LinkUnderVeil>
+              ))}
           </div>
         </div>
       </section>

@@ -67,7 +67,9 @@ export function ErrorBoundary() {
 export default function FilePage() {
   const { slug } = useParams();
   const article = getArticle(slug ?? "");
-  if (!article || article.frontmatter.draft) {
+  // getArticle only ever returns published articles (drafts are excluded at
+  // scan level), so an unknown slug is the sole not-found path here.
+  if (!article) {
     return <NotFoundPage />;
   }
   const { frontmatter: fm, Component } = article;

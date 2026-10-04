@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VeilProvider } from "@/components/motion/Veil";
@@ -40,10 +40,18 @@ describe("ArchiveSearch", () => {
     render(<ArchiveSearch />);
     expect(await screen.findByText(/Search is temporarily unavailable/i)).toBeTruthy();
   });
-  it("degrades when the search request fails", async () => {
+  it("survives a transient search-request failure without losing the input", async () => {
+    // 一次瞬时拒绝（部署交换、断网一瞬间）只清空结果，搜索功能必须还活着：
+    // 降级到 unavailable 通知是「索引加载失败」专属路径（见上一条用例）。
     search.mockRejectedValue(new Error("offline"));
-    fireEvent.change(await renderSearch(), { target: { value: "match" } });
-    expect(await screen.findByText(/Search is temporarily unavailable/i)).toBeTruthy();
+    const input = await renderSearch();
+    fireEvent.change(input, { target: { value: "match" } });
+    // 防抖 → 请求 → 拒绝 → searching 指示器熄灭：输入框仍在、无结果列表、
+    // 绝不降级到 unavailable（那是索引加载失败的专属路径）。
+    await waitFor(() => expect(screen.queryByText(/searching/i)).toBeNull());
+    expect(screen.getByRole("searchbox", { name: "Search the archive" })).toBeTruthy();
+    expect(screen.queryByText(/Search is temporarily unavailable/i)).toBeNull();
+    expect(screen.queryByRole("link")).toBeNull();
   });
   it("drops a single unreadable result without disabling search", async () => {
     search.mockResolvedValue({

@@ -48,7 +48,7 @@ export function SiteFooter() {
           </a>
         </nav>
       </div>
-      <div className="mx-auto flex max-w-[71rem] items-center justify-between gap-4 border-t border-paper/30 px-6 py-5 font-machine text-[10px] uppercase tracking-[0.1em]">
+      <div className="mx-auto flex max-w-[76rem] items-center justify-between gap-4 border-t border-paper/30 px-6 py-5 font-machine text-[10px] uppercase tracking-[0.1em]">
         <span>Written with curiosity. Read at your own pace.</span>
         <Magpie aria-hidden="true" className="size-6 shrink-0" />
       </div>
